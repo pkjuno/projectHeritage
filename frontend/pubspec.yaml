@@ -16,6 +16,18 @@ dependencies:
   # 백엔드 REST API 통신용 HTTP 클라이언트
   http: ^1.2.1
 
+  # JWT Access/Refresh Token을 안전하게 로컬에 저장하기 위한 보안 스토리지
+  flutter_secure_storage: ^9.2.2
+
+  # 구글 간편로그인 SDK
+  google_sign_in: ^6.2.1
+
+  # 카카오 간편로그인 SDK (사용 전 KakaoSdk.init(nativeAppKey: ...) 초기화 필요)
+  kakao_flutter_sdk_user: ^1.9.3+2
+
+  # 네이버 간편로그인 SDK (사용 전 clientId/clientSecret 초기화 필요)
+  flutter_naver_login: ^1.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

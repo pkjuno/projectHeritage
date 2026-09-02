@@ -12,10 +12,10 @@ const config = {
   // 실행 환경 (development / production / test)
   env: process.env.NODE_ENV || 'development',
 
-  // 데이터베이스 접속 정보
+  // 데이터베이스 접속 정보 (MySQL)
   db: {
     host: process.env.DB_HOST || 'localhost',
-    port: Number(process.env.DB_PORT) || 5432,
+    port: Number(process.env.DB_PORT) || 3306,
     name: process.env.DB_NAME || 'project_heritage',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
@@ -23,6 +23,14 @@ const config = {
 
   // CORS 허용 오리진 (프론트엔드 주소)
   clientOrigin: process.env.CLIENT_ORIGIN || '*',
+
+  // JWT(Access/Refresh Token) 관련 설정
+  jwt: {
+    accessSecret: process.env.JWT_ACCESS_SECRET || 'change-this-access-secret',
+    accessExpiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '1h',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'change-this-refresh-secret',
+    refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
+  },
 };
 
 module.exports = config;
