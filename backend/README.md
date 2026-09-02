@@ -16,6 +16,7 @@ backend/
 │   ├── seeders/         # 기준 데이터 시드 (시도 마스터 등)
 │   ├── scripts/          # 운영용 CLI 스크립트 (운영자 권한 부여 등)
 │   ├── jobs/             # 주기 실행 배치 (방문 하루 전 알림 등)
+│   ├── migrations/       # DB 스키마 마이그레이션 (sequelize-cli)
 │   ├── utils/          # 공통 유틸리티 함수
 │   ├── app.js          # Express 앱 설정
 │   └── server.js        # 서버 진입점
@@ -41,51 +42,48 @@ backend/
    cp .env.example .env
    # DB_* , JWT_* 값을 실제 환경에 맞게 수정
    ```
-3. 의존성 설치 및 서버 실행
+3. 의존성 설치, **스키마 생성**, 서버 실행
    ```bash
    npm install
+   npm run db:migrate   # 테이블 생성 (최초 1회 및 스키마 변경 시마다)
    npm run dev
    ```
-   서버 최초 기동 시 `sequelize.sync()`로 테이블이 자동 생성되고,
-   이어서 광역시도 마스터 데이터(17개)가 자동으로 시드됩니다.
+   서버는 기동 시 마이그레이션이 적용되어 있는지 확인하고,
+   광역시도 마스터 데이터(17개)를 자동으로 시드합니다.
 
-> **기존 개발 DB가 있다면 주의하세요.**
-> 마이페이지 기능을 추가하면서 회원 스키마가 변경되었습니다.
-> (`users`에서 `provider`/`provider_id` 제거 → `social_accounts` 테이블로 분리, `nickname`/`profile_image_url` 추가)
-> `sequelize.sync()`는 기존 테이블을 변경하지 않으므로, 개발 DB는 아래처럼 새로 만드는 것이 가장 간단합니다.
->
-> ```sql
-> DROP TABLE IF EXISTS social_accounts, users;
-> ```
->
-> 데이터를 보존해야 한다면 아래 마이그레이션 SQL을 참고하세요.
->
-> ```sql
-> -- 1) 새 컬럼 추가
-> ALTER TABLE users
->   ADD COLUMN nickname VARCHAR(30) NULL,
->   ADD COLUMN profile_image_url VARCHAR(500) NULL,
->   ADD COLUMN role ENUM('user','admin') NOT NULL DEFAULT 'user',
->   ADD COLUMN push_enabled TINYINT(1) NOT NULL DEFAULT 1,
->   ADD COLUMN push_token VARCHAR(255) NULL;
->
-> -- 2) 간편로그인 연결 테이블 생성 후 기존 SNS 가입 회원의 연결 정보 이관
-> --    (social_accounts 테이블은 서버를 한 번 기동하면 자동 생성됩니다)
-> INSERT INTO social_accounts (user_id, provider, provider_id, provider_email, created_at, updated_at)
-> SELECT id, provider, provider_id, email, NOW(), NOW()
->   FROM users
->  WHERE provider <> 'local' AND provider_id IS NOT NULL;
->
-> -- 3) 기존 유니크 인덱스/컬럼 정리 및 이메일 전역 유니크 적용
-> ALTER TABLE users
->   DROP INDEX uq_provider_provider_id,
->   DROP INDEX uq_provider_email,
->   DROP COLUMN provider,
->   DROP COLUMN provider_id,
->   ADD UNIQUE INDEX uq_users_email (email);
-> ```
->
-> 3번을 적용하기 전에 `email` 중복 행이 없는지 먼저 확인해야 합니다.
+## 데이터베이스 마이그레이션
+
+스키마는 **마이그레이션이 유일한 기준**입니다. 서버는 테이블을 자동으로 만들거나 바꾸지 않습니다.
+
+```bash
+npm run db:migrate          # 아직 적용되지 않은 마이그레이션 실행
+npm run db:migrate:status   # 적용 상태 확인
+npm run db:migrate:undo     # 마지막 마이그레이션 되돌리기
+```
+
+### 왜 sync()를 쓰지 않는가
+
+예전에는 기동할 때마다 `sequelize.sync()`로 테이블을 만들었습니다.
+그런데 `sync()`는 **이미 있는 테이블에 새 컬럼을 추가하지 않습니다.**
+그래서 모델에 필드를 더할 때마다 기존 DB에서 `Unknown column` 오류가 났고,
+README에 수동 `ALTER TABLE` SQL을 계속 덧붙여야 했습니다.
+(실제로 개발 중 두 번 겪었습니다)
+
+이제 스키마 변경은 마이그레이션 파일 하나만 추가하면 되고, 적용 이력도 DB에 남습니다.
+
+### 스키마를 바꾸려면
+
+1. 모델 파일(`src/models/*.js`)을 수정합니다.
+2. 같은 변경을 적용하는 마이그레이션을 추가합니다.
+   ```bash
+   npx sequelize-cli migration:generate --name add-something-to-users
+   ```
+3. `npm test`를 돌립니다.
+   **모델과 마이그레이션이 어긋나면 테스트가 실패합니다.**
+   (`tests/integration/migration.test.js`가 두 스키마를 컬럼·인덱스 단위로 비교합니다)
+4. `npm run db:migrate`로 적용합니다.
+
+`down`(되돌리기)도 반드시 구현해야 합니다. 이것 역시 테스트가 강제합니다.
 
 ## 테스트
 

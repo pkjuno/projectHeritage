@@ -16,6 +16,6 @@ require('../src/models');
  * 스키마 불일치를 원천적으로 없앤다.
  */
 module.exports = async () => {
-  await connectDatabase({ force: true });
+  await connectDatabase({ sync: true, force: true });
   await sequelize.close();
 };

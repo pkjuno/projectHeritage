@@ -12,7 +12,10 @@
     "admin:grant": "node src/scripts/grantAdmin.js",
     "test": "jest --runInBand",
     "test:watch": "jest --runInBand --watch",
-    "job:reminder": "node src/jobs/run.js"
+    "job:reminder": "node src/jobs/run.js",
+    "db:migrate": "sequelize-cli db:migrate",
+    "db:migrate:undo": "sequelize-cli db:migrate:undo",
+    "db:migrate:status": "sequelize-cli db:migrate:status"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -35,6 +38,7 @@
   "devDependencies": {
     "jest": "^30.5.1",
     "nodemon": "^3.1.0",
+    "sequelize-cli": "^6.6.5",
     "supertest": "^7.2.2"
   }
 }
