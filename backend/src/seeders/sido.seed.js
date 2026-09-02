@@ -1,4 +1,5 @@
 const Sido = require('../models/sido.model');
+const config = require('../config');
 
 // 국가유산청 Open API 시도코드(ccbaCtcd) 기준 17개 광역시도 마스터 데이터.
 const SIDO_SEED_DATA = [
@@ -30,7 +31,11 @@ async function seedSidos() {
   for (const sido of SIDO_SEED_DATA) {
     await Sido.findOrCreate({ where: { code: sido.code }, defaults: sido });
   }
-  console.log('[Seed] 시도 마스터 데이터 확인 완료 (17개)');
+
+  // 테스트는 매 케이스마다 시드를 다시 채우므로 로그를 남기지 않는다.
+  if (config.env !== 'test') {
+    console.log('[Seed] 시도 마스터 데이터 확인 완료 (17개)');
+  }
 }
 
 module.exports = { seedSidos, SIDO_SEED_DATA };

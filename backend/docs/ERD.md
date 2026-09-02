@@ -75,6 +75,7 @@ erDiagram
         string nickname "닉네임 (마이페이지에서 수정)"
         string profile_image_url "프로필 이미지 경로"
         string refresh_token "bcrypt 해시"
+        enum role "user/admin (축제·문화재 관리 권한)"
         enum status "active/withdrawn"
         datetime withdrawn_at
         datetime created_at

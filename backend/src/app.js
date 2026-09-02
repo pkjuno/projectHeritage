@@ -20,7 +20,10 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({ origin: config.clientOrigin }));
 
 // HTTP 요청 로그를 콘솔에 출력하는 미들웨어 (개발 환경에서 유용)
-app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
+// 테스트 실행 중에는 로그가 결과 출력에 섞이므로 끈다.
+if (config.env !== 'test') {
+  app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
+}
 
 // JSON 형식의 요청 본문을 파싱하는 미들웨어
 app.use(express.json());

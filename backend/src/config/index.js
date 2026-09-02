@@ -16,7 +16,12 @@ const config = {
   db: {
     host: process.env.DB_HOST || 'localhost',
     port: Number(process.env.DB_PORT) || 3306,
-    name: process.env.DB_NAME || 'project_heritage',
+    // 테스트는 테이블을 비우면서 실행되므로 개발/운영 DB와 반드시 분리한다.
+    // NODE_ENV=test일 때는 절대 DB_NAME을 쓰지 않는다. (실수로 개발 데이터를 날리는 것을 방지)
+    name:
+      (process.env.NODE_ENV || 'development') === 'test'
+        ? process.env.DB_NAME_TEST || 'project_heritage_test'
+        : process.env.DB_NAME || 'project_heritage',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
   },

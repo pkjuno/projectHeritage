@@ -8,7 +8,10 @@
     "dev": "nodemon src/server.js",
     "lint": "eslint src",
     "import:heritage": "node src/importers/run.js heritage",
-    "import:festival": "node src/importers/run.js festival"
+    "import:festival": "node src/importers/run.js festival",
+    "admin:grant": "node src/scripts/grantAdmin.js",
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -28,6 +31,8 @@
     "sequelize": "^6.37.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "jest": "^30.5.1",
+    "nodemon": "^3.1.0",
+    "supertest": "^7.2.2"
   }
 }

@@ -24,11 +24,15 @@ const sequelize = new Sequelize(config.db.name, config.db.user, config.db.passwo
  */
 async function connectDatabase() {
   await sequelize.authenticate();
-  console.log(`[DB] MySQL(${config.db.host}:${config.db.port}/${config.db.name}) 연결 성공`);
 
   // 모델 스키마를 테이블에 반영한다. (컬럼 삭제 없이 없는 것만 추가)
   await sequelize.sync();
-  console.log('[DB] 모델 동기화 완료');
+
+  // 테스트 실행 중에는 로그가 결과 출력에 섞이므로 생략한다.
+  if (config.env !== 'test') {
+    console.log(`[DB] MySQL(${config.db.host}:${config.db.port}/${config.db.name}) 연결 성공`);
+    console.log('[DB] 모델 동기화 완료');
+  }
 }
 
 module.exports = { sequelize, connectDatabase };

@@ -14,9 +14,13 @@ backend/
 │   ├── models/         # 도메인 모델 (Sequelize)
 │   ├── middlewares/    # 공통 미들웨어 (인증, 에러 처리 등)
 │   ├── seeders/         # 기준 데이터 시드 (시도 마스터 등)
+│   ├── scripts/          # 운영용 CLI 스크립트 (운영자 권한 부여 등)
 │   ├── utils/          # 공통 유틸리티 함수
 │   ├── app.js          # Express 앱 설정
 │   └── server.js        # 서버 진입점
+├── tests/
+│   ├── unit/             # 순수 로직 단위 테스트 (DB 불필요)
+│   └── integration/      # API 통합 테스트 (테스트 DB 사용)
 ├── docs/
 │   └── ERD.md            # 데이터베이스 ERD (Mermaid)
 ├── .env.example         # 환경 변수 예시 파일
@@ -78,6 +82,27 @@ backend/
 > ```
 >
 > 3번을 적용하기 전에 `email` 중복 행이 없는지 먼저 확인해야 합니다.
+
+## 테스트
+
+```bash
+npm test              # 전체 테스트 실행
+npm run test:watch    # 파일 변경 감지 모드
+```
+
+- `tests/unit/` — 날짜 계산, 캘린더 인덱스 생성 등 **순수 로직**. DB가 필요 없습니다.
+- `tests/integration/` — supertest로 라우터부터 DB까지 **실제 경로를 그대로** 통과시킵니다.
+  외부 SNS API 호출만 `jest.mock`으로 대체합니다.
+
+테스트는 **테스트 전용 DB**(`DB_NAME_TEST`, 기본 `project_heritage_test`)를 사용합니다.
+매 케이스마다 테이블을 비우기 때문에, 개발 DB를 실수로 지우지 않도록
+`NODE_ENV=test`일 때는 `DB_NAME`을 아예 참조하지 않도록 되어 있습니다.
+
+```sql
+CREATE DATABASE project_heritage_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+통합 테스트가 같은 DB를 공유하므로 `--runInBand`(직렬 실행)로 돌립니다.
 
 ## 회원(Auth) API
 
@@ -145,15 +170,37 @@ Flutter 앱이 각 SNS SDK(kakao_flutter_sdk, flutter_naver_login, google_sign_i
 
 문화재/지역축제 검색 시 `sidoCode` 쿼리 파라미터(예: `11`=서울특별시)로 사용하는 기준 데이터입니다.
 
+## 권한 (운영자 / 일반 회원)
+
+축제·문화재 데이터는 공공데이터를 정제해 서비스하는 자산이므로,
+**등록/수정/삭제는 운영자(admin)만** 할 수 있습니다. 조회는 누구나 가능합니다.
+
+| 구분 | 조회 | 등록/수정/삭제 |
+| --- | --- | --- |
+| 축제 · 문화재 | 누구나 | 운영자만 |
+| 위시리스트 · 내 일정 · 마이페이지 | 본인만 | 본인만 |
+
+- 신규 가입 회원은 항상 `user` 권한입니다. 가입 요청에 `role`을 넣어도 무시됩니다.
+- 권한 승격은 **서버에 접근 가능한 사람만 실행할 수 있는 CLI**로만 제공합니다.
+  API로 열어두면 그 자체가 권한 상승 통로가 되기 때문입니다.
+
+```bash
+npm run admin:grant -- admin@example.com            # 운영자로 승격
+npm run admin:grant -- admin@example.com --revoke   # 권한 회수
+```
+
+- 권한은 JWT에 담지 않고 **매 요청마다 DB에서 확인**합니다.
+  토큰에 넣으면 권한을 회수해도 토큰이 만료될 때까지(기본 1시간) 운영자로 남기 때문입니다.
+
 ## 문화재(국가유산) API
 
 | Method | Path | 설명 | 인증 |
 | --- | --- | --- | --- |
 | GET | `/api/heritages` | 목록 조회 (query: `sidoCode`, `keyword`, `designationType`, `page`, `limit`) | X |
 | GET | `/api/heritages/:id` | 상세 조회 | X |
-| POST | `/api/heritages` | 등록 (body: `sidoId`, `name`, `designationType`, `designatedDate`, `address`, `latitude`, `longitude`, `description`, `imageUrl` 등) | O |
-| PUT | `/api/heritages/:id` | 수정 | O |
-| DELETE | `/api/heritages/:id` | 삭제 | O |
+| POST | `/api/heritages` | 등록 (body: `sidoId`, `name`, `designationType`, `designatedDate`, `address`, `latitude`, `longitude`, `description`, `imageUrl` 등) | 운영자 |
+| PUT | `/api/heritages/:id` | 수정 | 운영자 |
+| DELETE | `/api/heritages/:id` | 삭제 | 운영자 |
 
 `designationType`은 `국가지정문화재`\|`시도지정문화재`\|`문화재자료`\|`등록문화재`\|`향토문화유적` 중 하나입니다.
 
@@ -164,9 +211,9 @@ Flutter 앱이 각 SNS SDK(kakao_flutter_sdk, flutter_naver_login, google_sign_i
 | GET | `/api/festivals` | 목록 조회 (query: `sidoCode`, `keyword`, `from`, `to`, `page`, `limit`) | X |
 | GET | `/api/festivals/calendar` | 캘린더 조회 (query: `year`, `month`, `sidoCode`, `keyword`) | X |
 | GET | `/api/festivals/:id` | 상세 조회 (로그인 시 `isWishlisted` 포함) | 선택 |
-| POST | `/api/festivals` | 등록 (body: `sidoId`, `name`, `startDate`, `endDate`, `location`, `hostOrganization`, `grade` 등) | O |
-| PUT | `/api/festivals/:id` | 수정 | O |
-| DELETE | `/api/festivals/:id` | 삭제 | O |
+| POST | `/api/festivals` | 등록 (body: `sidoId`, `name`, `startDate`, `endDate`, `location`, `hostOrganization`, `grade` 등) | 운영자 |
+| PUT | `/api/festivals/:id` | 수정 | 운영자 |
+| DELETE | `/api/festivals/:id` | 삭제 | 운영자 |
 
 `from`/`to`는 조회하려는 기간이며, 해당 기간과 축제 개최기간(`startDate`~`endDate`)이
 하루라도 겹치는 축제를 조회합니다. (예: `?from=2026-11-01&to=2026-11-30`)

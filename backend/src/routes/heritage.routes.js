@@ -1,6 +1,7 @@
 const express = require('express');
 const heritageController = require('../controllers/heritage.controller');
 const authenticate = require('../middlewares/authenticate');
+const requireAdmin = require('../middlewares/requireAdmin');
 
 // 문화재 도메인 관련 라우터
 const router = express.Router();
@@ -11,13 +12,13 @@ router.get('/', heritageController.list);
 // 문화재 상세 조회 - 공개
 router.get('/:id', heritageController.getById);
 
-// 문화재 등록 - 인증 필요
-router.post('/', authenticate, heritageController.create);
+// 문화재 등록 - 운영자 전용
+router.post('/', authenticate, requireAdmin, heritageController.create);
 
-// 문화재 수정 - 인증 필요
-router.put('/:id', authenticate, heritageController.update);
+// 문화재 수정 - 운영자 전용
+router.put('/:id', authenticate, requireAdmin, heritageController.update);
 
-// 문화재 삭제 - 인증 필요
-router.delete('/:id', authenticate, heritageController.remove);
+// 문화재 삭제 - 운영자 전용
+router.delete('/:id', authenticate, requireAdmin, heritageController.remove);
 
 module.exports = router;

@@ -15,6 +15,14 @@ class User extends Model {
   hasPassword() {
     return Boolean(this.password);
   }
+
+  /**
+   * 운영자 권한 보유 여부.
+   * @returns {boolean}
+   */
+  isAdmin() {
+    return this.role === 'admin';
+  }
 }
 
 User.init(
@@ -61,6 +69,14 @@ User.init(
     refreshToken: {
       type: DataTypes.STRING(500),
       allowNull: true,
+    },
+
+    // 권한 (user: 일반 회원, admin: 축제/문화재 데이터를 관리하는 운영자)
+    // 신규 가입은 항상 user이며, admin 승격은 별도 스크립트(npm run admin:grant)로만 가능하다.
+    role: {
+      type: DataTypes.ENUM('user', 'admin'),
+      allowNull: false,
+      defaultValue: 'user',
     },
 
     // 계정 상태 (active: 정상, withdrawn: 탈퇴)

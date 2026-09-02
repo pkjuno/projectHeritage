@@ -1,6 +1,7 @@
 const express = require('express');
 const festivalController = require('../controllers/festival.controller');
 const authenticate = require('../middlewares/authenticate');
+const requireAdmin = require('../middlewares/requireAdmin');
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate');
 
 // 지역축제 도메인 관련 라우터
@@ -16,13 +17,13 @@ router.get('/', festivalController.list);
 // 지역축제 상세 조회 - 공개 (로그인 시 위시리스트 담김 여부를 함께 반환)
 router.get('/:id', optionalAuthenticate, festivalController.getById);
 
-// 지역축제 등록 - 인증 필요
-router.post('/', authenticate, festivalController.create);
+// 지역축제 등록 - 운영자 전용
+router.post('/', authenticate, requireAdmin, festivalController.create);
 
-// 지역축제 수정 - 인증 필요
-router.put('/:id', authenticate, festivalController.update);
+// 지역축제 수정 - 운영자 전용
+router.put('/:id', authenticate, requireAdmin, festivalController.update);
 
-// 지역축제 삭제 - 인증 필요
-router.delete('/:id', authenticate, festivalController.remove);
+// 지역축제 삭제 - 운영자 전용
+router.delete('/:id', authenticate, requireAdmin, festivalController.remove);
 
 module.exports = router;
