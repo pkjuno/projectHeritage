@@ -46,7 +46,7 @@ class ApiService {
     final headers = await _buildHeaders(authorized: authorized);
     final response = await _client
         .get(uri, headers: headers)
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     return _handleResponse(response);
   }
 
@@ -56,7 +56,7 @@ class ApiService {
     final headers = await _buildHeaders(authorized: authorized);
     final response = await _client
         .post(uri, headers: headers, body: jsonEncode(body))
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     return _handleResponse(response);
   }
 
@@ -66,7 +66,7 @@ class ApiService {
     final headers = await _buildHeaders(authorized: authorized);
     final response = await _client
         .put(uri, headers: headers, body: jsonEncode(body))
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     return _handleResponse(response);
   }
 
@@ -76,7 +76,7 @@ class ApiService {
     final headers = await _buildHeaders(authorized: authorized);
     final response = await _client
         .patch(uri, headers: headers, body: jsonEncode(body))
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     return _handleResponse(response);
   }
 
@@ -104,7 +104,7 @@ class ApiService {
 
     final streamed = await _client
         .send(request)
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     final response = await http.Response.fromStream(streamed);
 
     return _handleResponse(response);
@@ -116,7 +116,7 @@ class ApiService {
     final headers = await _buildHeaders(authorized: authorized);
     final response = await _client
         .delete(uri, headers: headers)
-        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
     return _handleResponse(response);
   }
 

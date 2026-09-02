@@ -1,4 +1,9 @@
 # Flutter 공식 권장 린트 규칙을 사용한다.
+analyzer:
+  exclude:
+    - build/**
+    - web/**
+    - linux/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

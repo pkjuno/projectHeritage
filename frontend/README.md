@@ -40,6 +40,21 @@ flutter pub get
 flutter run
 ```
 
+## 검증
+
+```bash
+flutter analyze   # 정적 분석 (타입 오류, 잘못된 API 사용, 린트)
+flutter test      # 모델 파싱 등 순수 로직 테스트
+```
+
+`flutter analyze`는 **패키지 API를 잘못 쓴 경우까지 잡아냅니다.**
+실제로 카카오 SDK의 `isKakaoTalkInstalled()`를 `UserApi`의 메서드로 잘못 호출한 것을
+이 단계에서 발견했습니다. 코드를 고친 뒤에는 반드시 돌려보세요.
+
+`test/models_test.dart`는 서버 응답을 모델로 변환하는 부분을 검증합니다.
+여기가 틀리면 화면에 엉뚱한 값이 나오거나 런타임 캐스팅 오류가 나는데,
+실기기로 확인하기 전에는 알아채기 어려운 종류의 버그입니다.
+
 ## 백엔드 연동
 
 `lib/config/app_config.dart`의 `baseUrl` 값을 백엔드 서버 주소로 맞춰주세요.

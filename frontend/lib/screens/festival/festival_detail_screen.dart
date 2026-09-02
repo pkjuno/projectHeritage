@@ -186,7 +186,7 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : festival == null
-              ? Center(child: Text(AppStrings.errorMessage))
+              ? const Center(child: Text(AppStrings.errorMessage))
               : ListView(
                   padding: const EdgeInsets.all(AppSizes.paddingLarge),
                   children: [

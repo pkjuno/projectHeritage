@@ -165,7 +165,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _user == null
-              ? Center(child: Text(AppStrings.errorMessage))
+              ? const Center(child: Text(AppStrings.errorMessage))
               : RefreshIndicator(
                   onRefresh: _loadMyPage,
                   child: ListView(

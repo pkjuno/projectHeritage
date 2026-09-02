@@ -8,6 +8,7 @@ build/
 # IDE 설정
 .idea/
 .vscode/
+*.iml
 
 # 플랫폼별 빌드 폴더 (필요 시 flutter create로 재생성)
 android/

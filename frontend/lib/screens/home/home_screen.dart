@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // 에러 발생 시 (토큰 만료 등)
           if (snapshot.hasError) {
-            return Center(child: Text(AppStrings.errorMessage));
+            return const Center(child: Text(AppStrings.errorMessage));
           }
 
           final user = snapshot.data!;

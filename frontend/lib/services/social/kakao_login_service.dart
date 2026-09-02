@@ -8,9 +8,11 @@ class KakaoLoginService {
   /// 로그인을 취소하거나 실패하면 null을 반환한다.
   Future<String?> signIn() async {
     try {
-      final isKakaoTalkInstalled = await isKakaoTalkInstalledCheck();
+      // isKakaoTalkInstalled()는 SDK가 제공하는 최상위 함수다. (UserApi의 메서드가 아님)
+      final isInstalled = await isKakaoTalkInstalled();
 
-      final token = isKakaoTalkInstalled
+      // 카카오톡이 깔려 있으면 앱으로, 아니면 웹(카카오계정)으로 로그인한다.
+      final token = isInstalled
           ? await UserApi.instance.loginWithKakaoTalk()
           : await UserApi.instance.loginWithKakaoAccount();
 
@@ -19,10 +21,5 @@ class KakaoLoginService {
       // TODO: 실제 서비스에서는 에러 종류(사용자 취소 등)에 따라 세분화된 처리 필요
       return null;
     }
-  }
-
-  /// 카카오톡 앱 설치 여부를 확인하는 내부 함수.
-  Future<bool> isKakaoTalkInstalledCheck() async {
-    return UserApi.instance.isKakaoTalkInstalled();
   }
 }
