@@ -2,6 +2,7 @@ const app = require('./app');
 const config = require('./config');
 const { connectDatabase } = require('./config/database');
 const { seedSidos } = require('./seeders/sido.seed');
+const { registerJobs } = require('./jobs');
 
 /**
  * 서버를 부트스트랩(초기화 및 실행)한다.
@@ -15,7 +16,10 @@ async function bootstrap() {
     // 2. 광역시도 마스터 데이터 적재 (문화재/축제 조회의 기준 데이터)
     await seedSidos();
 
-    // 3. HTTP 서버 실행
+    // 3. 주기 실행 배치 등록 (방문 하루 전 알림 등)
+    registerJobs();
+
+    // 4. HTTP 서버 실행
     app.listen(config.port, () => {
       console.log(`[Server] ${config.env} 환경에서 http://localhost:${config.port} 실행 중`);
     });

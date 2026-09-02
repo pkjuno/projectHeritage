@@ -37,6 +37,12 @@ const config = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
   },
 
+  // 배치(스케줄러) 설정
+  jobs: {
+    // 방문 하루 전 알림 배치 실행 주기 (기본: 매일 오전 9시)
+    scheduleReminderCron: process.env.SCHEDULE_REMINDER_CRON || '0 9 * * *',
+  },
+
   // 프로필 이미지 등 업로드 파일 관련 설정
   upload: {
     // 업로드 파일을 저장할 루트 디렉터리 (프로젝트 루트 기준 상대 경로)

@@ -9,7 +9,9 @@ module.exports = {
   testEnvironment: 'node',
   // 테스트 파일 위치
   testMatch: ['**/tests/**/*.test.js'],
-  // 모든 테스트 전에 실행할 공통 설정 (테스트 DB 연결/스키마 동기화)
+  // 전체 실행 전 딱 한 번: 테스트 DB 스키마를 모델에 맞춰 새로 만든다.
+  globalSetup: '<rootDir>/tests/globalSetup.js',
+  // 각 테스트 파일마다: DB 연결 및 정리
   setupFilesAfterEnv: ['<rootDir>/tests/setup.js'],
   // 통합 테스트는 DB 연결을 포함하므로 기본 5초로는 부족할 수 있다.
   testTimeout: 30000,

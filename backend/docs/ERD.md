@@ -10,6 +10,7 @@
 - **SocialAccount**: 회원에 연결된 간편로그인(카카오/네이버/구글). 회원 1명이 여러 개를 연결할 수 있다.
 - **FestivalWishlist**: 회원이 찜한 축제 (날짜 없는 북마크)
 - **FestivalSchedule**: 회원의 축제 방문 일정 (방문일 + 메모)
+- **Notification**: 회원에게 보낸 알림 이력 (방문 하루 전 리마인더 등)
 
 GitHub에서는 아래 Mermaid 코드 블록이 다이어그램으로 자동 렌더링됩니다.
 
@@ -22,6 +23,8 @@ erDiagram
     USER ||--o{ FESTIVAL_SCHEDULE : "일정을 세운다"
     FESTIVAL ||--o{ FESTIVAL_WISHLIST : "찜된다"
     FESTIVAL ||--o{ FESTIVAL_SCHEDULE : "방문 대상이 된다"
+    USER ||--o{ NOTIFICATION : "알림을 받는다"
+    FESTIVAL ||--o{ NOTIFICATION : "알림의 대상이 된다"
 
     SIDO {
         int id PK
@@ -75,6 +78,8 @@ erDiagram
         string nickname "닉네임 (마이페이지에서 수정)"
         string profile_image_url "프로필 이미지 경로"
         string refresh_token "bcrypt 해시"
+        boolean push_enabled "푸시 수신 동의"
+        string push_token "기기 푸시 토큰 (회원당 1개)"
         enum role "user/admin (축제·문화재 관리 권한)"
         enum status "active/withdrawn"
         datetime withdrawn_at
@@ -109,6 +114,20 @@ erDiagram
         datetime created_at
         datetime updated_at
     }
+
+    NOTIFICATION {
+        int id PK
+        int user_id FK
+        int festival_id FK "이동할 축제 (없을 수 있음)"
+        enum type "schedule_reminder/festival_start/notice"
+        string title
+        string body
+        string dedupe_key "중복 생성 방지 키"
+        datetime sent_at "푸시 발송 시각 (null이면 미발송)"
+        datetime read_at "확인 시각 (null이면 안 읽음)"
+        datetime created_at
+        datetime updated_at
+    }
 ```
 
 ## 관계 설명
@@ -129,6 +148,8 @@ erDiagram
 | `uq_wishlist_user_festival` (user_id + festival_id) | 같은 축제를 중복으로 찜하는 것을 방지 |
 | `uq_schedule_user_festival_date` (user_id + festival_id + visit_date) | 같은 축제를 같은 날짜로 중복 등록하는 것을 방지 |
 | `idx_schedule_user_visit_date` (user_id + visit_date) | 내 일정을 기간으로 조회할 때 사용 |
+| `uq_notification_user_dedupe` (user_id + dedupe_key) | 배치 재실행 시 같은 알림이 중복 생성되는 것을 방지 |
+| `idx_notification_user_created` (user_id + created_at) | 알림함을 최신순으로 조회할 때 사용 |
 
 > 위시리스트는 "가보고 싶다"는 날짜 없는 북마크, 일정은 "언제 갈지" 정해진 계획이라
 > 서로 다른 질문에 답하므로 테이블을 분리했습니다.

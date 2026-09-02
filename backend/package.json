@@ -11,7 +11,8 @@
     "import:festival": "node src/importers/run.js festival",
     "admin:grant": "node src/scripts/grantAdmin.js",
     "test": "jest --runInBand",
-    "test:watch": "jest --runInBand --watch"
+    "test:watch": "jest --runInBand --watch",
+    "job:reminder": "node src/jobs/run.js"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -28,6 +29,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.3.0",
     "mysql2": "^3.10.1",
+    "node-cron": "^4.6.0",
     "sequelize": "^6.37.3"
   },
   "devDependencies": {

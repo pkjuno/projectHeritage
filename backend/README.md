@@ -15,6 +15,7 @@ backend/
 │   ├── middlewares/    # 공통 미들웨어 (인증, 에러 처리 등)
 │   ├── seeders/         # 기준 데이터 시드 (시도 마스터 등)
 │   ├── scripts/          # 운영용 CLI 스크립트 (운영자 권한 부여 등)
+│   ├── jobs/             # 주기 실행 배치 (방문 하루 전 알림 등)
 │   ├── utils/          # 공통 유틸리티 함수
 │   ├── app.js          # Express 앱 설정
 │   └── server.js        # 서버 진입점
@@ -63,7 +64,10 @@ backend/
 > -- 1) 새 컬럼 추가
 > ALTER TABLE users
 >   ADD COLUMN nickname VARCHAR(30) NULL,
->   ADD COLUMN profile_image_url VARCHAR(500) NULL;
+>   ADD COLUMN profile_image_url VARCHAR(500) NULL,
+>   ADD COLUMN role ENUM('user','admin') NOT NULL DEFAULT 'user',
+>   ADD COLUMN push_enabled TINYINT(1) NOT NULL DEFAULT 1,
+>   ADD COLUMN push_token VARCHAR(255) NULL;
 >
 > -- 2) 간편로그인 연결 테이블 생성 후 기존 SNS 가입 회원의 연결 정보 이관
 > --    (social_accounts 테이블은 서버를 한 번 기동하면 자동 생성됩니다)
@@ -128,6 +132,42 @@ CREATE DATABASE project_heritage_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unic
 | GET | `/api/users/me/social-accounts` | 연결된 간편로그인 목록 조회 | O |
 | POST | `/api/users/me/social-accounts/:provider` | 간편로그인 연결 (body: `accessToken`) | O |
 | DELETE | `/api/users/me/social-accounts/:provider` | 간편로그인 연결 해지 | O |
+
+### 알림 API
+
+| Method | Path | 설명 | 인증 |
+| --- | --- | --- | --- |
+| GET | `/api/users/me/notifications` | 내 알림 목록 + 안 읽은 개수 | O |
+| PATCH | `/api/users/me/notifications/read-all` | 전체 읽음 처리 | O |
+| PATCH | `/api/users/me/notifications/:id/read` | 1건 읽음 처리 | O |
+| PUT | `/api/users/me/push-settings` | 푸시 수신 설정/기기 토큰 등록 (body: `pushEnabled`, `pushToken`) | O |
+
+### 방문 하루 전 알림
+
+일정을 등록해두기만 하면 사용자가 직접 앱을 열기 전까지 아무 일도 일어나지 않습니다.
+그래서 **방문 예정일 하루 전에 알림을 만들어주는 배치**가 일정 기능의 나머지 절반입니다.
+
+```bash
+npm run job:reminder                        # 오늘 기준 "내일" 방문 일정에 알림 생성
+npm run job:reminder -- --days=3            # 3일 뒤 방문 일정 대상
+npm run job:reminder -- --date=2026-11-05   # 특정 날짜를 "오늘"로 간주 (테스트용)
+```
+
+서버가 뜨면 `SCHEDULE_REMINDER_CRON`(기본 `0 9 * * *`, 매일 오전 9시) 주기로 자동 실행됩니다.
+
+- 알림은 **DB에 이력으로 남고**(알림함), 그와 별개로 푸시를 시도합니다.
+  푸시 전송에 실패해도 사용자가 앱에서 확인할 수 있고, 나중에 재발송 대상을 찾을 수 있습니다.
+- 같은 일정에 대해서는 `dedupeKey`로 중복 생성을 막으므로,
+  배치가 하루에 여러 번 돌거나 재시도되어도 알림은 한 번만 만들어집니다.
+- 수신을 거부(`pushEnabled=false`)했거나 기기 토큰이 없으면 푸시는 건너뛰고 알림함에만 쌓입니다.
+
+> **실제 푸시 전송은 아직 연결되어 있지 않습니다.**
+> FCM 서비스 계정 키가 필요하므로, 전송부를 `src/services/pushSender.service.js` 한 곳으로
+> 분리해두고 현재는 로그만 남깁니다. 실제 연동 시 그 파일의 `sendPush` 안에 있는 TODO만
+> 구현하면 되고 나머지 코드는 그대로 둡니다.
+>
+> 기기 토큰은 현재 **회원당 1개**만 저장하므로 다른 기기에서 로그인하면 대체됩니다.
+> 여러 기기를 동시에 지원하려면 `device_tokens` 테이블로 분리해야 합니다.
 
 ### 회원과 간편로그인 연결 구조
 

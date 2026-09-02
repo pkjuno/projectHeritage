@@ -22,11 +22,13 @@ const sequelize = new Sequelize(config.db.name, config.db.user, config.db.passwo
  * 운영 환경에서는 sync 대신 마이그레이션 도구(sequelize-cli 등) 사용을 권장한다.
  * @returns {Promise<void>}
  */
-async function connectDatabase() {
+async function connectDatabase({ force = false } = {}) {
   await sequelize.authenticate();
 
-  // 모델 스키마를 테이블에 반영한다. (컬럼 삭제 없이 없는 것만 추가)
-  await sequelize.sync();
+  // 모델 스키마를 테이블에 반영한다.
+  // force=true는 테이블을 지우고 다시 만들므로 테스트 DB 초기화에서만 사용한다.
+  // (일반 sync는 기존 테이블에 새 컬럼을 추가하지 않는다 - 운영에서는 마이그레이션 도구 사용 권장)
+  await sequelize.sync({ force });
 
   // 테스트 실행 중에는 로그가 결과 출력에 섞이므로 생략한다.
   if (config.env !== 'test') {

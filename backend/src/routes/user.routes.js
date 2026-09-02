@@ -3,6 +3,7 @@ const userController = require('../controllers/user.controller');
 const socialAccountController = require('../controllers/socialAccount.controller');
 const wishlistController = require('../controllers/wishlist.controller');
 const scheduleController = require('../controllers/schedule.controller');
+const notificationController = require('../controllers/notification.controller');
 const authenticate = require('../middlewares/authenticate');
 const { uploadProfileImage } = require('../middlewares/upload');
 
@@ -53,5 +54,18 @@ router.patch('/me/schedules/:id', scheduleController.update);
 
 // 내 일정 - 삭제
 router.delete('/me/schedules/:id', scheduleController.remove);
+
+// 알림 - 내 알림 목록 (안 읽은 개수 포함)
+router.get('/me/notifications', notificationController.list);
+
+// 알림 - 전체 읽음 처리
+// ":id" 라우트보다 먼저 등록해야 "read-all"이 id로 해석되지 않는다.
+router.patch('/me/notifications/read-all', notificationController.readAll);
+
+// 알림 - 1건 읽음 처리
+router.patch('/me/notifications/:id/read', notificationController.read);
+
+// 알림 - 푸시 수신 설정 및 기기 토큰 등록
+router.put('/me/push-settings', notificationController.updatePushSettings);
 
 module.exports = router;

@@ -71,6 +71,21 @@ User.init(
       allowNull: true,
     },
 
+    // 푸시 알림 수신 동의 여부. 마이페이지에서 끌 수 있다.
+    pushEnabled: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+    },
+
+    // 푸시 발송에 사용하는 기기 토큰(FCM 등). 로그인한 기기에서 등록한다.
+    // 현재는 회원당 1개만 저장하므로 다른 기기에서 등록하면 대체된다.
+    // 여러 기기를 동시에 지원하려면 device_tokens 테이블로 분리해야 한다.
+    pushToken: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+
     // 권한 (user: 일반 회원, admin: 축제/문화재 데이터를 관리하는 운영자)
     // 신규 가입은 항상 user이며, admin 승격은 별도 스크립트(npm run admin:grant)로만 가능하다.
     role: {

@@ -114,4 +114,34 @@ async function removeProfileImage(userId) {
   return updated;
 }
 
-module.exports = { getMyPage, updateMyInfo, changeProfileImage, removeProfileImage };
+/**
+ * 푸시 알림 수신 설정과 기기 토큰을 저장한다.
+ * @param {number} userId
+ * @param {{pushEnabled?: boolean, pushToken?: string|null}} payload
+ * @returns {Promise<import('../models/user.model')>}
+ */
+async function updatePushSettings(userId, { pushEnabled, pushToken }) {
+  const user = await getActiveUser(userId);
+
+  if (pushEnabled !== undefined) {
+    if (typeof pushEnabled !== 'boolean') {
+      throw new AppError(400, 'pushEnabled는 true/false 값이어야 합니다.');
+    }
+    user.pushEnabled = pushEnabled;
+  }
+
+  if (pushToken !== undefined) {
+    // 로그아웃 시 기기 토큰을 지울 수 있도록 null/빈 문자열을 허용한다.
+    user.pushToken = pushToken ? String(pushToken) : null;
+  }
+
+  return user.save();
+}
+
+module.exports = {
+  getMyPage,
+  updateMyInfo,
+  changeProfileImage,
+  removeProfileImage,
+  updatePushSettings,
+};

@@ -19,6 +19,7 @@ const { seedSidos } = require('../src/seeders/sido.seed');
  */
 async function resetDatabase() {
   const tables = [
+    'notifications',
     'festival_schedules',
     'festival_wishlists',
     'social_accounts',
