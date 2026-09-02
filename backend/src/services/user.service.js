@@ -1,32 +1,30 @@
 const User = require('../models/user.model');
+const SocialAccount = require('../models/socialAccount.model');
 
 /**
  * User 도메인의 DB 접근(Repository) 계층.
- * auth.service.js 등 상위 비즈니스 로직에서 이 함수들을 통해서만 User 테이블에 접근한다.
+ * auth.service.js, profile.service.js 등 상위 비즈니스 로직에서
+ * 이 함수들을 통해서만 users 테이블에 접근한다.
  */
 
+// 조회 시 함께 가져올 연결된 SNS 계정 정보
+const SOCIAL_ACCOUNT_INCLUDE = {
+  model: SocialAccount,
+  as: 'socialAccounts',
+  attributes: ['id', 'provider', 'providerEmail', 'createdAt'],
+};
+
 /**
- * provider + email 조합으로 사용자를 조회한다. (주로 local 로그인에서 사용)
+ * 이메일로 회원을 조회한다.
  * @param {string} email
- * @param {string} [provider='local']
  * @returns {Promise<User|null>}
  */
-async function findByEmailAndProvider(email, provider = 'local') {
-  return User.findOne({ where: { email, provider } });
+async function findByEmail(email) {
+  return User.findOne({ where: { email } });
 }
 
 /**
- * provider + providerId 조합으로 사용자를 조회한다. (SNS 로그인에서 사용)
- * @param {string} provider - 'naver' | 'kakao' | 'google'
- * @param {string} providerId - SNS 제공자가 발급한 고유 ID
- * @returns {Promise<User|null>}
- */
-async function findByProviderId(provider, providerId) {
-  return User.findOne({ where: { provider, providerId } });
-}
-
-/**
- * PK로 사용자를 조회한다.
+ * PK로 회원을 조회한다.
  * @param {number} id
  * @returns {Promise<User|null>}
  */
@@ -35,31 +33,57 @@ async function findById(id) {
 }
 
 /**
- * 일반(local) 회원가입 사용자를 생성한다.
- * @param {{email: string, hashedPassword: string, name: string}} params
- * @returns {Promise<User>}
+ * PK로 회원을 조회하되, 연결된 간편로그인 목록을 함께 가져온다. (마이페이지용)
+ * @param {number} id
+ * @returns {Promise<User|null>}
  */
-async function createLocalUser({ email, hashedPassword, name }) {
-  return User.create({ email, password: hashedPassword, name, provider: 'local' });
+async function findByIdWithSocialAccounts(id) {
+  return User.findByPk(id, { include: [SOCIAL_ACCOUNT_INCLUDE] });
 }
 
 /**
- * SNS 간편로그인으로 최초 로그인한 사용자를 생성한다.
- * @param {{provider: string, providerId: string, email: string, name: string}} params
+ * 일반(이메일/비밀번호) 회원가입 사용자를 생성한다.
+ * @param {{email: string, hashedPassword: string, name: string, nickname?: string}} params
  * @returns {Promise<User>}
  */
-async function createSocialUser({ provider, providerId, email, name }) {
-  return User.create({ provider, providerId, email, name, password: null });
+async function createLocalUser({ email, hashedPassword, name, nickname }) {
+  return User.create({ email, password: hashedPassword, name, nickname: nickname ?? name });
 }
 
 /**
- * 사용자의 Refresh Token(해시 값)을 갱신한다. null을 전달하면 로그아웃 처리된다.
+ * 간편로그인으로 최초 로그인한 회원을 생성한다. (비밀번호 없음)
+ * @param {{email: string, name: string, nickname?: string, transaction?: object}} params
+ * @returns {Promise<User>}
+ */
+async function createSocialUser({ email, name, nickname, transaction }) {
+  return User.create(
+    { email, password: null, name, nickname: nickname ?? name },
+    { transaction }
+  );
+}
+
+/**
+ * 회원의 Refresh Token(해시 값)을 갱신한다. null을 전달하면 로그아웃 처리된다.
  * @param {User} user
  * @param {string|null} hashedRefreshToken
  * @returns {Promise<User>}
  */
 async function updateRefreshToken(user, hashedRefreshToken) {
   user.refreshToken = hashedRefreshToken;
+  return user.save();
+}
+
+/**
+ * 회원 정보(닉네임/이름/프로필 이미지)를 수정한다.
+ * undefined인 항목은 변경하지 않는다.
+ * @param {User} user
+ * @param {{nickname?: string, name?: string, profileImageUrl?: string|null}} payload
+ * @returns {Promise<User>}
+ */
+async function updateProfile(user, payload) {
+  if (payload.nickname !== undefined) user.nickname = payload.nickname;
+  if (payload.name !== undefined) user.name = payload.name;
+  if (payload.profileImageUrl !== undefined) user.profileImageUrl = payload.profileImageUrl;
   return user.save();
 }
 
@@ -77,11 +101,13 @@ async function markAsWithdrawn(user) {
 }
 
 module.exports = {
-  findByEmailAndProvider,
-  findByProviderId,
+  findByEmail,
   findById,
+  findByIdWithSocialAccounts,
   createLocalUser,
   createSocialUser,
   updateRefreshToken,
+  updateProfile,
   markAsWithdrawn,
+  SOCIAL_ACCOUNT_INCLUDE,
 };

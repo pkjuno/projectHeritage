@@ -44,6 +44,41 @@ backend/
    서버 최초 기동 시 `sequelize.sync()`로 테이블이 자동 생성되고,
    이어서 광역시도 마스터 데이터(17개)가 자동으로 시드됩니다.
 
+> **기존 개발 DB가 있다면 주의하세요.**
+> 마이페이지 기능을 추가하면서 회원 스키마가 변경되었습니다.
+> (`users`에서 `provider`/`provider_id` 제거 → `social_accounts` 테이블로 분리, `nickname`/`profile_image_url` 추가)
+> `sequelize.sync()`는 기존 테이블을 변경하지 않으므로, 개발 DB는 아래처럼 새로 만드는 것이 가장 간단합니다.
+>
+> ```sql
+> DROP TABLE IF EXISTS social_accounts, users;
+> ```
+>
+> 데이터를 보존해야 한다면 아래 마이그레이션 SQL을 참고하세요.
+>
+> ```sql
+> -- 1) 새 컬럼 추가
+> ALTER TABLE users
+>   ADD COLUMN nickname VARCHAR(30) NULL,
+>   ADD COLUMN profile_image_url VARCHAR(500) NULL;
+>
+> -- 2) 간편로그인 연결 테이블 생성 후 기존 SNS 가입 회원의 연결 정보 이관
+> --    (social_accounts 테이블은 서버를 한 번 기동하면 자동 생성됩니다)
+> INSERT INTO social_accounts (user_id, provider, provider_id, provider_email, created_at, updated_at)
+> SELECT id, provider, provider_id, email, NOW(), NOW()
+>   FROM users
+>  WHERE provider <> 'local' AND provider_id IS NOT NULL;
+>
+> -- 3) 기존 유니크 인덱스/컬럼 정리 및 이메일 전역 유니크 적용
+> ALTER TABLE users
+>   DROP INDEX uq_provider_provider_id,
+>   DROP INDEX uq_provider_email,
+>   DROP COLUMN provider,
+>   DROP COLUMN provider_id,
+>   ADD UNIQUE INDEX uq_users_email (email);
+> ```
+>
+> 3번을 적용하기 전에 `email` 중복 행이 없는지 먼저 확인해야 합니다.
+
 ## 회원(Auth) API
 
 | Method | Path | 설명 | 인증 |
@@ -54,9 +89,40 @@ backend/
 | POST | `/api/auth/refresh` | Access Token 재발급 (body: refreshToken) | X |
 | POST | `/api/auth/logout` | 로그아웃 | O |
 | DELETE | `/api/auth/withdraw` | 회원 탈퇴 | O |
-| GET | `/api/users/me` | 내 정보 조회 | O |
 
 인증이 필요한 API는 `Authorization: Bearer {accessToken}` 헤더가 필요합니다.
+
+## 마이페이지 API
+
+| Method | Path | 설명 | 인증 |
+| --- | --- | --- | --- |
+| GET | `/api/users/me` | 내 정보 + 연결된 간편로그인 목록 조회 | O |
+| PATCH | `/api/users/me` | 회원정보 수정 (body: `nickname`, `name`) | O |
+| PUT | `/api/users/me/profile-image` | 프로필 이미지 등록/수정 (multipart/form-data, 필드명 `image`) | O |
+| DELETE | `/api/users/me/profile-image` | 프로필 이미지 삭제 | O |
+| GET | `/api/users/me/social-accounts` | 연결된 간편로그인 목록 조회 | O |
+| POST | `/api/users/me/social-accounts/:provider` | 간편로그인 연결 (body: `accessToken`) | O |
+| DELETE | `/api/users/me/social-accounts/:provider` | 간편로그인 연결 해지 | O |
+
+### 회원과 간편로그인 연결 구조
+
+회원(`users`)과 간편로그인 연결(`social_accounts`)은 1:N으로 분리되어 있어,
+한 회원이 카카오/네이버/구글을 **동시에 연결하고 개별적으로 해지**할 수 있습니다.
+
+- 연결: 앱이 해당 SNS SDK로 로그인해 받은 `accessToken`을 보내면, 서버가 SNS API로 본인 확인 후 연결합니다.
+- 이미 다른 회원이 사용 중인 SNS 계정은 연결할 수 없습니다. (409)
+- 해지: 해지 후 로그인 수단이 하나도 남지 않는 경우(비밀번호 없음 + 마지막 SNS 연결)에는
+  계정 잠김을 막기 위해 거부합니다. (400)
+- 간편로그인 최초 가입 시 SNS 이메일이 기존 회원과 겹치면, 본인 확인 없는 자동 병합 대신
+  409를 반환하고 "기존 계정으로 로그인 후 마이페이지에서 연결"하도록 안내합니다.
+
+### 프로필 이미지 업로드
+
+- 저장 위치: `UPLOAD_DIR`(기본 `uploads/`) 아래 `profiles/` 디렉터리
+- 접근 경로: `/uploads/profiles/{파일명}` (Express static으로 제공)
+- 허용 형식: jpg / png / webp / gif, 최대 용량 `UPLOAD_MAX_IMAGE_SIZE`(기본 5MB)
+- 원본 파일명은 신뢰하지 않고 UUID로 새로 저장하며, 이미지 교체/삭제 시 이전 파일을 정리합니다.
+- 로컬 디스크 저장 방식이므로, 서버를 여러 대로 확장할 때는 S3 등 외부 스토리지로 교체하는 것을 권장합니다.
 
 ### SNS 간편로그인 동작 방식
 

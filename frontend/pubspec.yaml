@@ -19,6 +19,9 @@ dependencies:
   # JWT Access/Refresh Token을 안전하게 로컬에 저장하기 위한 보안 스토리지
   flutter_secure_storage: ^9.2.2
 
+  # 프로필 이미지 선택(갤러리/카메라)용 이미지 피커
+  image_picker: ^1.1.2
+
   # 구글 간편로그인 SDK
   google_sign_in: ^6.2.1
 

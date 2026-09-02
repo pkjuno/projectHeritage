@@ -12,11 +12,13 @@ frontend/
 │   ├── screens/
 │   │   ├── splash/            # 스플래시(자동 로그인 체크) 화면
 │   │   ├── auth/               # 로그인 / 회원가입 화면
-│   │   └── home/                # 홈(마이페이지) 화면
+│   │   ├── home/                # 홈 화면
+│   │   └── mypage/              # 마이페이지 (프로필/회원정보/간편로그인 연결)
 │   ├── services/
-│   │   ├── api_service.dart    # 공통 HTTP 통신 (인증 헤더 자동 부착)
+│   │   ├── api_service.dart    # 공통 HTTP 통신 (인증 헤더 자동 부착, 파일 업로드)
 │   │   ├── auth_service.dart   # 회원가입/로그인/로그아웃/탈퇴/토큰재발급
-│   │   ├── user_service.dart   # 내 정보 조회
+│   │   ├── user_service.dart   # 내 정보 조회/수정, 프로필 이미지
+│   │   ├── social_account_service.dart # 간편로그인 연결/해지
 │   │   ├── token_storage.dart  # JWT 보안 저장소 (flutter_secure_storage)
 │   │   └── social/              # SNS(카카오/네이버/구글) 로그인 SDK 래퍼
 │   ├── models/                 # 데이터 모델 (DTO)
@@ -61,6 +63,20 @@ flutter run
 - kakao_flutter_sdk_user: https://developers.kakao.com/docs/latest/ko/flutter/getting-started
 - flutter_naver_login: https://pub.dev/packages/flutter_naver_login
 - google_sign_in: https://pub.dev/packages/google_sign_in
+
+## 마이페이지
+
+`lib/screens/mypage/mypage_screen.dart`에서 아래 기능을 제공합니다.
+
+- **프로필 관리**: `image_picker`로 갤러리에서 이미지를 선택해 등록/변경하고, 삭제할 수 있습니다.
+  업로드 전 `maxWidth`/`imageQuality`로 리사이즈해 서버의 용량 제한(기본 5MB)을 넘지 않도록 합니다.
+- **회원정보**: 닉네임을 수정합니다. (2~30자)
+- **간편로그인 연결/해지**: 카카오/네이버/구글별로 연결 상태를 보여주고,
+  연결 시에는 해당 SNS SDK로 로그인해 받은 토큰을 백엔드로 전달합니다.
+  로그인 수단이 하나만 남는 경우 해지 버튼이 비활성화됩니다. (서버에서도 동일하게 차단)
+
+> `image_picker`는 iOS의 사진 접근 권한 설명(`NSPhotoLibraryUsageDescription`) 등
+> 플랫폼별 설정이 필요합니다. 자세한 내용은 https://pub.dev/packages/image_picker 를 참고하세요.
 
 ## 인증(로그인 상태) 흐름
 

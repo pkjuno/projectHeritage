@@ -4,9 +4,10 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
+import '../mypage/mypage_screen.dart';
 
-/// 앱의 메인(홈/마이페이지) 화면.
-/// 로그인된 사용자의 정보를 보여주고, 로그아웃/회원탈퇴 기능을 제공한다.
+/// 앱의 메인(홈) 화면.
+/// 로그인된 회원 정보를 요약해 보여주고, 마이페이지 이동/로그아웃/회원탈퇴를 제공한다.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -25,6 +26,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _meFuture = _userService.fetchMe();
+  }
+
+  /// 마이페이지로 이동한다. 돌아오면 변경된 회원정보를 다시 불러온다.
+  Future<void> _goToMyPage() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const MyPageScreen()),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _meFuture = _userService.fetchMe();
+    });
   }
 
   /// 로그아웃 처리 후 로그인 화면으로 이동하는 함수.
@@ -70,6 +83,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(AppStrings.homeTitle),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: AppStrings.myPageTitle,
+            onPressed: _goToMyPage,
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             tooltip: AppStrings.logoutButton,
             onPressed: _handleLogout,
@@ -90,17 +108,42 @@ class _HomeScreenState extends State<HomeScreen> {
           }
 
           final user = snapshot.data!;
+          final imageUrl = user.profileImageFullUrl;
 
           return Padding(
             padding: const EdgeInsets.all(AppSizes.paddingLarge),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('이름: ${user.name}', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: AppSizes.paddingSmall),
-                Text('이메일: ${user.email}'),
-                const SizedBox(height: AppSizes.paddingSmall),
-                Text('가입 경로: ${user.provider.name}'),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+                      child: imageUrl == null ? const Icon(Icons.person) : null,
+                    ),
+                    const SizedBox(width: AppSizes.paddingMedium),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${user.displayName}님, 환영합니다',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        Text(user.email, style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.paddingLarge),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.manage_accounts),
+                  title: const Text(AppStrings.myPageTitle),
+                  subtitle: const Text('회원정보 수정, 프로필 이미지, 간편로그인 연결 관리'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _goToMyPage,
+                ),
                 const Spacer(),
                 TextButton(
                   onPressed: _handleWithdraw,

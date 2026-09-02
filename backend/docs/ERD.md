@@ -6,7 +6,8 @@
 - **Sido**: 광역시도 마스터 (국가유산청 Open API 시도코드 기준 17개 고정 데이터)
 - **Heritage**: 문화재(국가유산) 정보
 - **Festival**: 지역축제 정보
-- **User**: 회원 (이전에 구현한 인증 도메인, 문화재/축제와 직접적인 FK 관계는 없음)
+- **User**: 회원 (인증/마이페이지 도메인, 문화재/축제와 직접적인 FK 관계는 없음)
+- **SocialAccount**: 회원에 연결된 간편로그인(카카오/네이버/구글). 회원 1명이 여러 개를 연결할 수 있다.
 
 GitHub에서는 아래 Mermaid 코드 블록이 다이어그램으로 자동 렌더링됩니다.
 
@@ -14,6 +15,7 @@ GitHub에서는 아래 Mermaid 코드 블록이 다이어그램으로 자동 렌
 erDiagram
     SIDO ||--o{ HERITAGE : "소재한다"
     SIDO ||--o{ FESTIVAL : "개최된다"
+    USER ||--o{ SOCIAL_ACCOUNT : "연결한다"
 
     SIDO {
         int id PK
@@ -61,15 +63,25 @@ erDiagram
 
     USER {
         int id PK
-        string email
-        string password "bcrypt 해시, SNS 전용 계정은 null"
-        string name
-        enum provider "local/naver/kakao/google"
-        string provider_id "SNS 고유 ID"
+        string email UK "로그인 아이디"
+        string password "bcrypt 해시, 간편로그인 전용 계정은 null"
+        string name "이름"
+        string nickname "닉네임 (마이페이지에서 수정)"
+        string profile_image_url "프로필 이미지 경로"
         string refresh_token "bcrypt 해시"
         enum status "active/withdrawn"
         datetime withdrawn_at
         datetime created_at
+        datetime updated_at
+    }
+
+    SOCIAL_ACCOUNT {
+        int id PK
+        int user_id FK
+        enum provider "naver/kakao/google"
+        string provider_id "제공자 발급 고유 ID"
+        string provider_email "제공자가 준 이메일"
+        datetime created_at "연결 시각"
         datetime updated_at
     }
 ```
@@ -80,7 +92,18 @@ erDiagram
 | --- | --- |
 | Sido 1 : N Heritage | 하나의 시도에 여러 문화재가 소속된다. |
 | Sido 1 : N Festival | 하나의 시도에서 여러 지역축제가 개최된다. |
+| User 1 : N SocialAccount | 회원 1명이 카카오/네이버/구글을 각각 연결할 수 있고, 마이페이지에서 개별 해지가 가능하다. 회원 삭제 시 연결 정보도 함께 삭제(CASCADE)된다. |
 | User | 현재 Heritage/Festival과 직접적인 연관관계는 없다. (추후 "관심 축제/문화재 즐겨찾기" 등 확장 시 User-Festival, User-Heritage 다대다 관계 추가 가능) |
+
+### SocialAccount 제약 조건
+
+| 제약 | 목적 |
+| --- | --- |
+| `uq_social_provider_provider_id` (provider + provider_id) | 하나의 SNS 계정이 여러 회원에게 중복 연결되는 것을 방지 |
+| `uq_social_user_provider` (user_id + provider) | 한 회원이 같은 제공자를 중복 연결하는 것을 방지 |
+
+> 연결 해지 시 서버는 "비밀번호가 없고 남은 SNS 연결이 1개뿐인" 경우를 거부해,
+> 로그인 수단이 모두 사라져 계정에 접근하지 못하게 되는 상황을 막습니다.
 
 ## 설계 근거 (PDF 자료 매핑)
 

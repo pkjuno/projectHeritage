@@ -25,6 +25,19 @@ class AppStrings {
   static const String logoutButton = '로그아웃';
   static const String withdrawButton = '회원 탈퇴';
   static const String withdrawConfirmMessage = '정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+
+  // 마이페이지
+  static const String myPageTitle = '마이페이지';
+  static const String profileSectionTitle = '프로필';
+  static const String myInfoSectionTitle = '회원정보';
+  static const String socialSectionTitle = '간편로그인 연결';
+  static const String nicknameLabel = '닉네임';
+  static const String changeImageButton = '이미지 변경';
+  static const String deleteImageButton = '이미지 삭제';
+  static const String saveButton = '저장';
+  static const String linkButton = '연결';
+  static const String unlinkButton = '해지';
+  static const String unlinkConfirmMessage = '간편로그인 연결을 해지하시겠습니까?';
 }
 
 /// 앱 전역에서 재사용하는 여백/크기 값 모음.

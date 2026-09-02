@@ -31,6 +31,16 @@ const config = {
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'change-this-refresh-secret',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '14d',
   },
+
+  // 프로필 이미지 등 업로드 파일 관련 설정
+  upload: {
+    // 업로드 파일을 저장할 루트 디렉터리 (프로젝트 루트 기준 상대 경로)
+    dir: process.env.UPLOAD_DIR || 'uploads',
+    // 업로드 파일을 외부에 노출할 URL 접두사 (예: /uploads/profiles/xxx.jpg)
+    urlPath: '/uploads',
+    // 프로필 이미지 최대 용량 (기본 5MB)
+    maxImageSizeBytes: Number(process.env.UPLOAD_MAX_IMAGE_SIZE) || 5 * 1024 * 1024,
+  },
 };
 
 module.exports = config;

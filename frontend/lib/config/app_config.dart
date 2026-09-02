@@ -3,8 +3,11 @@
 class AppConfig {
   AppConfig._(); // 인스턴스 생성을 막기 위한 private 생성자
 
-  /// 백엔드 API 서버의 기본 주소
-  static const String baseUrl = 'http://localhost:3000/api';
+  /// 백엔드 서버 주소 (업로드된 프로필 이미지 등 정적 파일 경로에 사용)
+  static const String serverBaseUrl = 'http://localhost:3000';
+
+  /// 백엔드 API 기본 주소
+  static const String baseUrl = '$serverBaseUrl/api';
 
   /// API 요청 타임아웃 시간(초)
   static const int requestTimeoutSeconds = 10;

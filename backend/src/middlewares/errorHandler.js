@@ -1,3 +1,4 @@
+const multer = require('multer');
 const config = require('../config');
 const { fail } = require('../utils/response');
 
@@ -14,6 +15,15 @@ function errorHandler(err, req, res, next) {
   // 개발 환경에서는 콘솔에 스택 트레이스를 남겨 디버깅을 돕는다.
   if (config.env === 'development') {
     console.error(err.stack);
+  }
+
+  // 파일 업로드(multer) 관련 에러는 클라이언트 입력 문제이므로 400으로 변환한다.
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? `이미지 용량은 ${Math.floor(config.upload.maxImageSizeBytes / (1024 * 1024))}MB 이하만 업로드할 수 있습니다.`
+        : `파일 업로드에 실패했습니다. (${err.code})`;
+    return fail(res, 400, message);
   }
 
   const statusCode = err.statusCode || 500;

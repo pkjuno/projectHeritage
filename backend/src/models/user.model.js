@@ -3,9 +3,19 @@ const { sequelize } = require('../config/database');
 
 /**
  * 회원(User) 도메인 모델.
- * 일반 회원가입(local)과 SNS 간편로그인(naver/kakao/google) 계정을 함께 관리한다.
+ * 회원 1명당 1행이며, 간편로그인 연결 정보는 SocialAccount(1:N)에서 별도로 관리한다.
+ * 따라서 한 회원이 카카오/네이버/구글을 동시에 연결하거나 개별적으로 해지할 수 있다.
  */
-class User extends Model {}
+class User extends Model {
+  /**
+   * 이 회원이 사용 가능한 로그인 수단이 비밀번호인지 여부.
+   * 간편로그인 연결 해지 시 "마지막 로그인 수단"인지 판단하는 데 사용한다.
+   * @returns {boolean}
+   */
+  hasPassword() {
+    return Boolean(this.password);
+  }
+}
 
 User.init(
   {
@@ -16,34 +26,34 @@ User.init(
       autoIncrement: true,
     },
 
-    // 이메일 (로그인 아이디로 사용, SNS 로그인 시 provider에서 제공하는 이메일)
+    // 이메일 (일반 로그인 아이디). 간편로그인 최초 가입 시에는 SNS가 제공한 이메일을 사용한다.
     email: {
       type: DataTypes.STRING(191),
       allowNull: false,
+      unique: true,
     },
 
-    // 비밀번호 (bcrypt 해시 값). SNS 전용 계정은 비밀번호가 없으므로 null 허용
+    // 비밀번호 (bcrypt 해시 값). 간편로그인으로만 가입한 회원은 비밀번호가 없으므로 null 허용
     password: {
       type: DataTypes.STRING(255),
       allowNull: true,
     },
 
-    // 회원 이름/닉네임
+    // 회원 이름 (실명 등, 가입 시 입력값)
     name: {
       type: DataTypes.STRING(50),
       allowNull: false,
     },
 
-    // 가입 경로 (local: 자체 회원가입, naver/kakao/google: 간편로그인)
-    provider: {
-      type: DataTypes.ENUM('local', 'naver', 'kakao', 'google'),
-      allowNull: false,
-      defaultValue: 'local',
+    // 닉네임 (마이페이지에서 수정 가능한 표시 이름)
+    nickname: {
+      type: DataTypes.STRING(30),
+      allowNull: true,
     },
 
-    // SNS 로그인 제공자가 발급한 고유 사용자 ID (local 가입 시 null)
-    providerId: {
-      type: DataTypes.STRING(255),
+    // 프로필 이미지 경로 (예: /uploads/profiles/xxxx.jpg). 미등록 시 null
+    profileImageUrl: {
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
 
@@ -72,12 +82,6 @@ User.init(
     tableName: 'users',
     // createdAt / updatedAt 컬럼 자동 관리
     timestamps: true,
-    indexes: [
-      // 동일 provider 내에서 providerId는 유일해야 한다. (SNS 계정 중복 가입 방지)
-      { unique: true, fields: ['provider', 'provider_id'], name: 'uq_provider_provider_id' },
-      // 동일 provider 내에서 email은 유일해야 한다. (local 계정 중복 가입 방지)
-      { unique: true, fields: ['provider', 'email'], name: 'uq_provider_email' },
-    ],
   }
 );
 
