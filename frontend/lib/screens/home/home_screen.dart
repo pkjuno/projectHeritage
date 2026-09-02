@@ -4,6 +4,8 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
+import '../festival/festival_calendar_screen.dart';
+import '../mypage/my_festival_screen.dart';
 import '../mypage/mypage_screen.dart';
 
 /// 앱의 메인(홈) 화면.
@@ -136,6 +138,26 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSizes.paddingLarge),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.calendar_month),
+                  title: const Text(AppStrings.festivalCalendarTitle),
+                  subtitle: const Text('지역별 축제를 달력에서 확인하고 일정을 담아보세요'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const FestivalCalendarScreen()),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.favorite_border),
+                  title: const Text(AppStrings.myFestivalTitle),
+                  subtitle: const Text('찜한 축제와 방문 일정 관리'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const MyFestivalScreen()),
+                  ),
+                ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.manage_accounts),

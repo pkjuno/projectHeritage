@@ -1,4 +1,6 @@
 const festivalService = require('../services/festival.service');
+const festivalCalendarService = require('../services/festivalCalendar.service');
+const wishlistService = require('../services/wishlist.service');
 const AppError = require('../utils/AppError');
 const { success } = require('../utils/response');
 
@@ -16,13 +18,35 @@ async function list(req, res, next) {
 }
 
 /**
+ * [GET] /api/festivals/calendar
+ * 지역별 축제를 캘린더(월 단위) 형태로 조회하는 컨트롤러.
+ * (query: year, month, sidoCode, keyword)
+ *
+ * 응답의 days는 "날짜 -> 축제 ID 배열" 인덱스이며, festivals 배열에서 상세 정보를 찾아 쓴다.
+ */
+async function calendar(req, res, next) {
+  try {
+    const result = await festivalCalendarService.getMonthlyCalendar(req.query);
+    return success(res, 200, '축제 캘린더 조회 성공', result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
  * [GET] /api/festivals/:id
  * 지역축제 상세 조회 컨트롤러.
+ * 로그인 상태라면 내가 찜한 축제인지(isWishlisted)도 함께 내려준다.
  */
 async function getById(req, res, next) {
   try {
     const festival = await festivalService.getById(req.params.id);
-    return success(res, 200, '지역축제 상세 조회 성공', festival);
+    const isWishlisted = await wishlistService.isWishlisted(req.user?.id, festival.id);
+
+    return success(res, 200, '지역축제 상세 조회 성공', {
+      ...festival.toJSON(),
+      isWishlisted,
+    });
   } catch (error) {
     return next(error);
   }
@@ -72,4 +96,4 @@ async function remove(req, res, next) {
   }
 }
 
-module.exports = { list, getById, create, update, remove };
+module.exports = { list, calendar, getById, create, update, remove };

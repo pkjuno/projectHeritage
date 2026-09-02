@@ -64,6 +64,26 @@ flutter run
 - flutter_naver_login: https://pub.dev/packages/flutter_naver_login
 - google_sign_in: https://pub.dev/packages/google_sign_in
 
+## 축제 캘린더
+
+`lib/screens/festival/festival_calendar_screen.dart`
+
+- `table_calendar`로 월 단위 달력을 그리고, 축제가 진행되는 날짜에 마커를 표시합니다.
+- 상단 드롭다운에서 지역(시도)을 선택해 필터링할 수 있습니다. (전국이 기본)
+- 날짜를 선택하면 그날 진행 중인 축제 목록이 아래에 나오고, 누르면 상세 화면으로 이동합니다.
+- 달을 넘기면 해당 월 데이터를 새로 조회하며, 선택 날짜도 그 달 안으로 자동 이동합니다.
+
+서버는 축제 목록과 "날짜 → 축제 ID" 인덱스를 따로 내려주므로,
+한 달 내내 열리는 축제가 날짜마다 중복 전송되지 않습니다.
+`FestivalCalendarModel.festivalsOn(date)`이 이 인덱스를 풀어 `eventLoader`에 연결됩니다.
+
+### 축제 상세 / 위시리스트 / 내 일정
+
+- `festival_detail_screen.dart`: 상세 정보와 함께 **위시리스트 담기/빼기**, **일정 추가**를 제공합니다.
+  일정 추가 시 `showDatePicker`의 선택 범위를 **축제 개최 기간으로 제한**해,
+  축제가 열리지 않는 날짜를 아예 고를 수 없게 합니다. (서버에서도 동일하게 검증)
+- `mypage/my_festival_screen.dart`: 찜한 축제와 내 일정을 탭으로 나눠 보여주고 삭제할 수 있습니다.
+
 ## 마이페이지
 
 `lib/screens/mypage/mypage_screen.dart`에서 아래 기능을 제공합니다.

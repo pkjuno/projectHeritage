@@ -162,13 +162,59 @@ Flutter 앱이 각 SNS SDK(kakao_flutter_sdk, flutter_naver_login, google_sign_i
 | Method | Path | 설명 | 인증 |
 | --- | --- | --- | --- |
 | GET | `/api/festivals` | 목록 조회 (query: `sidoCode`, `keyword`, `from`, `to`, `page`, `limit`) | X |
-| GET | `/api/festivals/:id` | 상세 조회 | X |
+| GET | `/api/festivals/calendar` | 캘린더 조회 (query: `year`, `month`, `sidoCode`, `keyword`) | X |
+| GET | `/api/festivals/:id` | 상세 조회 (로그인 시 `isWishlisted` 포함) | 선택 |
 | POST | `/api/festivals` | 등록 (body: `sidoId`, `name`, `startDate`, `endDate`, `location`, `hostOrganization`, `grade` 등) | O |
 | PUT | `/api/festivals/:id` | 수정 | O |
 | DELETE | `/api/festivals/:id` | 삭제 | O |
 
 `from`/`to`는 조회하려는 기간이며, 해당 기간과 축제 개최기간(`startDate`~`endDate`)이
 하루라도 겹치는 축제를 조회합니다. (예: `?from=2026-11-01&to=2026-11-30`)
+
+### 축제 캘린더 응답 구조
+
+축제는 **기간**을 가지므로 캘린더에서는 시작일 하루가 아니라 **진행 중인 모든 날짜**에 표시되어야 합니다.
+다만 축제 객체를 날짜마다 복사하면 한 달 내내 열리는 축제가 30번 중복되므로,
+목록은 한 번만 내려주고 날짜별로는 **ID 인덱스**만 제공합니다.
+
+```jsonc
+GET /api/festivals/calendar?year=2026&month=11&sidoCode=11
+
+{
+  "year": 2026, "month": 11,
+  "startDate": "2026-11-01", "endDate": "2026-11-30",
+  "festivals": [ { "id": 1, "name": "서울빛초롱축제", "startDate": "2026-11-05", "endDate": "2026-11-07", ... } ],
+  "days": { "2026-11-05": [1], "2026-11-06": [1], "2026-11-07": [1] },
+  "truncated": false   // true면 축제가 너무 많아 일부만 내려간 것 (지역/키워드로 좁혀야 함)
+}
+```
+
+- 월을 걸쳐 진행되는 축제는 **조회한 달에 해당하는 구간만** `days`에 들어갑니다.
+  (10/28~11/02 축제는 11월 조회 시 `2026-11-01`, `2026-11-02`에만 표시)
+- 한 달에 담을 수 있는 축제는 최대 500건이며, 초과 시 `truncated: true`로 알려줍니다.
+
+## 위시리스트 / 내 일정 API
+
+| Method | Path | 설명 | 인증 |
+| --- | --- | --- | --- |
+| GET | `/api/users/me/wishlists` | 내가 찜한 축제 목록 (query: `page`, `limit`) | O |
+| POST | `/api/users/me/wishlists/:festivalId` | 위시리스트에 추가 | O |
+| DELETE | `/api/users/me/wishlists/:festivalId` | 위시리스트에서 제거 | O |
+| GET | `/api/users/me/schedules` | 내 일정 목록 (query: `from`, `to`) | O |
+| POST | `/api/users/me/schedules` | 일정 등록 (body: `festivalId`, `visitDate`, `memo`) | O |
+| PATCH | `/api/users/me/schedules/:id` | 일정 수정 (body: `visitDate`, `memo`) | O |
+| DELETE | `/api/users/me/schedules/:id` | 일정 삭제 | O |
+
+### 위시리스트와 일정을 나눈 이유
+
+두 기능은 답하는 질문이 다릅니다.
+
+- **위시리스트**: "가보고 싶다" — 날짜가 없는 북마크. 축제당 1건만 담을 수 있습니다.
+- **일정**: "언제 갈지" — 방문일과 메모가 있는 개인 계획. 같은 축제를 여러 날 방문하는 계획도 세울 수 있습니다.
+
+일정 등록/수정 시 **방문일이 축제 개최 기간 안에 있는지 검증**합니다.
+축제가 열리지 않는 날짜로 일정을 잡는 것을 막기 위한 도메인 규칙입니다.
+같은 축제를 같은 날짜로 중복 등록하는 것도 막습니다. (409)
 
 ### 데이터 출처
 

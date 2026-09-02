@@ -38,6 +38,26 @@ class AppStrings {
   static const String linkButton = '연결';
   static const String unlinkButton = '해지';
   static const String unlinkConfirmMessage = '간편로그인 연결을 해지하시겠습니까?';
+
+  // 축제 캘린더 / 상세
+  static const String festivalCalendarTitle = '축제 캘린더';
+  static const String festivalDetailTitle = '축제 상세';
+  static const String allRegions = '전국';
+  static const String noFestivalOnDay = '선택한 날짜에 진행되는 축제가 없습니다.';
+  static const String loginRequired = '로그인이 필요한 기능입니다.';
+
+  // 위시리스트 / 내 일정
+  static const String myFestivalTitle = '내 축제';
+  static const String wishlistTitle = '위시리스트';
+  static const String scheduleTitle = '내 일정';
+  static const String addWishlist = '위시리스트 담기';
+  static const String removeWishlist = '위시리스트 빼기';
+  static const String addSchedule = '일정 추가';
+  static const String pickVisitDate = '방문할 날짜를 선택하세요';
+  static const String scheduleMemoTitle = '메모 (선택)';
+  static const String deleteScheduleTitle = '일정 삭제';
+  static const String emptyWishlist = '아직 찜한 축제가 없습니다.';
+  static const String emptySchedule = '등록된 일정이 없습니다.';
 }
 
 /// 앱 전역에서 재사용하는 여백/크기 값 모음.

@@ -8,6 +8,8 @@
 - **Festival**: 지역축제 정보
 - **User**: 회원 (인증/마이페이지 도메인, 문화재/축제와 직접적인 FK 관계는 없음)
 - **SocialAccount**: 회원에 연결된 간편로그인(카카오/네이버/구글). 회원 1명이 여러 개를 연결할 수 있다.
+- **FestivalWishlist**: 회원이 찜한 축제 (날짜 없는 북마크)
+- **FestivalSchedule**: 회원의 축제 방문 일정 (방문일 + 메모)
 
 GitHub에서는 아래 Mermaid 코드 블록이 다이어그램으로 자동 렌더링됩니다.
 
@@ -16,6 +18,10 @@ erDiagram
     SIDO ||--o{ HERITAGE : "소재한다"
     SIDO ||--o{ FESTIVAL : "개최된다"
     USER ||--o{ SOCIAL_ACCOUNT : "연결한다"
+    USER ||--o{ FESTIVAL_WISHLIST : "찜한다"
+    USER ||--o{ FESTIVAL_SCHEDULE : "일정을 세운다"
+    FESTIVAL ||--o{ FESTIVAL_WISHLIST : "찜된다"
+    FESTIVAL ||--o{ FESTIVAL_SCHEDULE : "방문 대상이 된다"
 
     SIDO {
         int id PK
@@ -84,6 +90,24 @@ erDiagram
         datetime created_at "연결 시각"
         datetime updated_at
     }
+
+    FESTIVAL_WISHLIST {
+        int id PK
+        int user_id FK
+        int festival_id FK
+        datetime created_at "찜한 시각"
+        datetime updated_at
+    }
+
+    FESTIVAL_SCHEDULE {
+        int id PK
+        int user_id FK
+        int festival_id FK
+        date visit_date "방문 예정일 (축제 기간 내)"
+        string memo "개인 메모"
+        datetime created_at
+        datetime updated_at
+    }
 ```
 
 ## 관계 설명
@@ -93,7 +117,21 @@ erDiagram
 | Sido 1 : N Heritage | 하나의 시도에 여러 문화재가 소속된다. |
 | Sido 1 : N Festival | 하나의 시도에서 여러 지역축제가 개최된다. |
 | User 1 : N SocialAccount | 회원 1명이 카카오/네이버/구글을 각각 연결할 수 있고, 마이페이지에서 개별 해지가 가능하다. 회원 삭제 시 연결 정보도 함께 삭제(CASCADE)된다. |
-| User | 현재 Heritage/Festival과 직접적인 연관관계는 없다. (추후 "관심 축제/문화재 즐겨찾기" 등 확장 시 User-Festival, User-Heritage 다대다 관계 추가 가능) |
+| User N : M Festival (Wishlist) | 회원이 축제를 찜한다. FestivalWishlist가 교차 테이블 역할을 하며, 회원/축제 삭제 시 함께 정리된다. |
+| User N : M Festival (Schedule) | 회원이 축제 방문 일정을 세운다. 같은 축제를 여러 날 방문할 수 있어 방문일까지 포함해 유일성을 판단한다. |
+| User - Heritage | 현재 직접적인 연관관계는 없다. (추후 문화재 즐겨찾기 등으로 확장 가능) |
+
+### 위시리스트 / 일정 제약 조건
+
+| 제약 | 목적 |
+| --- | --- |
+| `uq_wishlist_user_festival` (user_id + festival_id) | 같은 축제를 중복으로 찜하는 것을 방지 |
+| `uq_schedule_user_festival_date` (user_id + festival_id + visit_date) | 같은 축제를 같은 날짜로 중복 등록하는 것을 방지 |
+| `idx_schedule_user_visit_date` (user_id + visit_date) | 내 일정을 기간으로 조회할 때 사용 |
+
+> 위시리스트는 "가보고 싶다"는 날짜 없는 북마크, 일정은 "언제 갈지" 정해진 계획이라
+> 서로 다른 질문에 답하므로 테이블을 분리했습니다.
+> 일정의 `visit_date`는 애플리케이션 레벨에서 해당 축제의 개최 기간 안에 있는지 검증합니다.
 
 ### SocialAccount 제약 조건
 
