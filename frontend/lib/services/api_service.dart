@@ -60,6 +60,16 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// PUT 요청을 보내고 응답 본문(JSON)을 반환한다. (설정 저장 등에서 사용)
+  Future<dynamic> put(String path, Map<String, dynamic> body, {bool authorized = false}) async {
+    final uri = Uri.parse('${AppConfig.baseUrl}$path');
+    final headers = await _buildHeaders(authorized: authorized);
+    final response = await _client
+        .put(uri, headers: headers, body: jsonEncode(body))
+        .timeout(Duration(seconds: AppConfig.requestTimeoutSeconds));
+    return _handleResponse(response);
+  }
+
   /// PATCH 요청을 보내고 응답 본문(JSON)을 반환한다. (회원정보 부분 수정 등에서 사용)
   Future<dynamic> patch(String path, Map<String, dynamic> body, {bool authorized = false}) async {
     final uri = Uri.parse('${AppConfig.baseUrl}$path');

@@ -258,6 +258,30 @@ npm run admin:grant -- admin@example.com --revoke   # 권한 회수
 `from`/`to`는 조회하려는 기간이며, 해당 기간과 축제 개최기간(`startDate`~`endDate`)이
 하루라도 겹치는 축제를 조회합니다. (예: `?from=2026-11-01&to=2026-11-30`)
 
+## 탐색 API (큐레이션 / 내 주변)
+
+캘린더는 "날짜를 알고 찾는" 화면이라, "이번 주말에 갈 만한 거 없나?" 같은 실제 탐색 방식과는 맞지 않습니다.
+그래서 **시간**과 **거리** 기준으로 찾는 API를 따로 뒀습니다.
+
+| Method | Path | 설명 | 인증 |
+| --- | --- | --- | --- |
+| GET | `/api/festivals/curated` | 진행 중 / 이번 주말 / 곧 시작 (query: `sidoCode`, `limit`, `date`) | X |
+| GET | `/api/festivals/nearby` | 내 주변 축제 (query: `lat`, `lng`, `radius`, `limit`, `onlyOngoing`) | X |
+| GET | `/api/heritages/nearby` | 내 주변 문화재 (query: `lat`, `lng`, `radius`, `limit`) | X |
+| GET | `/api/festivals/:id/nearby-heritages` | 이 축제 주변 문화재 (query: `radius`, `limit`) | X |
+
+- 거리 계산은 MySQL `ST_Distance_Sphere`를 사용하며, 응답의 각 항목에 `distanceKm`가 함께 담깁니다.
+  정렬은 가까운 순입니다.
+- **반경은 최대 200km로 제한**됩니다. "주변"의 의미를 벗어나면 전국 조회와 다를 바 없기 때문입니다.
+  기본값은 20km입니다.
+- 좌표가 없는 데이터(`latitude`/`longitude`가 null)는 거리 계산이 불가능하므로 결과에서 제외됩니다.
+- `/api/festivals/nearby`는 기본적으로 **아직 끝나지 않은 축제만** 반환합니다.
+  이미 끝난 축제를 "근처"라고 안내하면 쓸모가 없기 때문입니다. (`onlyOngoing=false`로 해제 가능)
+- `이번 주말`은 기준일이 속한 주의 토~일입니다. 이미 주말이면 그 주말을, 평일이면 다가오는 주말을 가리킵니다.
+
+`/api/festivals/:id/nearby-heritages`는 **"축제 갔다가 근처 문화재 들르기"** 동선을 위한 API로,
+축제 상세 화면에서 사용합니다. 축제에 좌표가 없으면 400과 함께 그 이유를 알려줍니다.
+
 ### 축제 캘린더 응답 구조
 
 축제는 **기간**을 가지므로 캘린더에서는 시작일 하루가 아니라 **진행 중인 모든 날짜**에 표시되어야 합니다.

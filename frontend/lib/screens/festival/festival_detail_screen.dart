@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../models/festival_model.dart';
+import '../../models/nearby_model.dart';
 import '../../services/api_service.dart';
 import '../../services/festival_service.dart';
 import '../../services/schedule_service.dart';
@@ -24,6 +25,10 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
   final ScheduleService _scheduleService = ScheduleService();
 
   FestivalModel? _festival;
+
+  /// 이 축제 주변의 문화재. 좌표가 없는 축제는 비어 있다.
+  List<NearbyHeritageModel> _nearbyHeritages = [];
+
   bool _isLoading = true;
   bool _isSubmitting = false;
 
@@ -40,12 +45,27 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
       final festival = await _festivalService.fetchDetail(widget.festivalId);
       if (!mounted) return;
       setState(() => _festival = festival);
+
+      // 주변 문화재는 부가 정보라, 실패해도 상세 화면 자체는 그대로 보여준다.
+      await _loadNearbyHeritages();
     } on ApiException catch (error) {
       _showMessage(error.message);
     } catch (_) {
       _showMessage(AppStrings.errorMessage);
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// 이 축제 주변의 문화재를 불러온다. (좌표가 없으면 서버가 400을 주므로 조용히 넘어간다)
+  Future<void> _loadNearbyHeritages() async {
+    try {
+      final heritages = await _festivalService.fetchNearbyHeritages(widget.festivalId);
+      if (!mounted) return;
+      setState(() => _nearbyHeritages = heritages);
+    } catch (_) {
+      // 좌표가 없거나 조회에 실패한 경우 - 섹션을 숨기기만 한다.
+      if (mounted) setState(() => _nearbyHeritages = []);
     }
   }
 
@@ -184,6 +204,27 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
                       Text('축제 소개', style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: AppSizes.paddingSmall),
                       Text(festival.description!),
+                    ],
+                    if (_nearbyHeritages.isNotEmpty) ...[
+                      const Divider(height: AppSizes.paddingLarge * 2),
+                      Text(
+                        AppStrings.nearbyHeritageSection,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSizes.paddingSmall),
+                      // 축제 갔다가 들를 만한 곳을 가까운 순으로 보여준다.
+                      ..._nearbyHeritages.map(
+                        (heritage) => ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.account_balance_outlined),
+                          title: Text(heritage.name),
+                          subtitle: heritage.address != null ? Text(heritage.address!) : null,
+                          trailing: Text(
+                            heritage.distanceLabel,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                     ],
                   ],
                 ),

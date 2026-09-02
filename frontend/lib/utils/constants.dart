@@ -58,6 +58,22 @@ class AppStrings {
   static const String deleteScheduleTitle = '일정 삭제';
   static const String emptyWishlist = '아직 찜한 축제가 없습니다.';
   static const String emptySchedule = '등록된 일정이 없습니다.';
+
+  // 알림
+  static const String notificationTitle = '알림';
+  static const String markAllRead = '모두 읽음';
+  static const String emptyNotification = '받은 알림이 없습니다.';
+
+  // 둘러보기 (큐레이션 / 내 주변)
+  static const String discoverTitle = '둘러보기';
+  static const String ongoingSection = '지금 진행 중';
+  static const String weekendSection = '이번 주말';
+  static const String upcomingSection = '곧 시작해요';
+  static const String nearbySection = '내 주변 축제';
+  static const String findNearby = '현재 위치로 찾기';
+  static const String emptyDiscover = '표시할 축제가 없습니다.';
+  static const String emptyNearby = '주변에 진행 중인 축제가 없습니다.';
+  static const String nearbyHeritageSection = '이 축제 주변 문화재';
 }
 
 /// 앱 전역에서 재사용하는 여백/크기 값 모음.

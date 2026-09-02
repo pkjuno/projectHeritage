@@ -5,8 +5,10 @@ import '../../services/user_service.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
 import '../festival/festival_calendar_screen.dart';
+import '../festival/festival_discover_screen.dart';
 import '../mypage/my_festival_screen.dart';
 import '../mypage/mypage_screen.dart';
+import '../mypage/notification_screen.dart';
 
 /// 앱의 메인(홈) 화면.
 /// 로그인된 회원 정보를 요약해 보여주고, 마이페이지 이동/로그아웃/회원탈퇴를 제공한다.
@@ -85,6 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(AppStrings.homeTitle),
         actions: [
           IconButton(
+            icon: const Icon(Icons.notifications_none),
+            tooltip: AppStrings.notificationTitle,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const NotificationScreen()),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.person),
             tooltip: AppStrings.myPageTitle,
             onPressed: _goToMyPage,
@@ -138,6 +147,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSizes.paddingLarge),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.explore_outlined),
+                  title: const Text(AppStrings.discoverTitle),
+                  subtitle: const Text('지금 진행 중, 이번 주말, 내 주변 축제 찾기'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const FestivalDiscoverScreen()),
+                  ),
+                ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_month),

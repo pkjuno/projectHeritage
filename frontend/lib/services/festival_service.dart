@@ -1,5 +1,6 @@
 import '../models/festival_calendar_model.dart';
 import '../models/festival_model.dart';
+import '../models/nearby_model.dart';
 import '../models/sido_model.dart';
 import 'api_service.dart';
 
@@ -35,6 +36,50 @@ class FestivalService {
   Future<FestivalModel> fetchDetail(int festivalId) async {
     final data = await _apiService.get('/festivals/$festivalId', authorized: true);
     return FestivalModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// 홈 화면용 큐레이션(진행 중 / 이번 주말 / 곧 시작)을 조회한다.
+  /// [sidoCode]를 주면 해당 지역으로 좁힌다.
+  Future<CuratedFestivalsModel> fetchCurated({String? sidoCode, int limit = 10}) async {
+    final query = <String>['limit=$limit'];
+    if (sidoCode != null && sidoCode.isNotEmpty) query.add('sidoCode=$sidoCode');
+
+    final data = await _apiService.get('/festivals/curated?${query.join('&')}');
+    return CuratedFestivalsModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// 좌표 기준 반경 안의 축제를 가까운 순으로 조회한다.
+  /// [radiusKm]는 서버에서 최대 200km로 제한된다.
+  Future<List<NearbyFestivalModel>> fetchNearby({
+    required double latitude,
+    required double longitude,
+    int radiusKm = 20,
+    int limit = 20,
+  }) async {
+    final data = await _apiService.get(
+      '/festivals/nearby?lat=$latitude&lng=$longitude&radius=$radiusKm&limit=$limit',
+    );
+
+    final items = (data as Map<String, dynamic>)['items'] as List<dynamic>;
+    return items
+        .map((item) => NearbyFestivalModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// 특정 축제 주변의 문화재를 조회한다. (축제 갔다가 들를 곳 추천)
+  Future<List<NearbyHeritageModel>> fetchNearbyHeritages(
+    int festivalId, {
+    int radiusKm = 10,
+    int limit = 10,
+  }) async {
+    final data = await _apiService.get(
+      '/festivals/$festivalId/nearby-heritages?radius=$radiusKm&limit=$limit',
+    );
+
+    final items = (data as Map<String, dynamic>)['items'] as List<dynamic>;
+    return items
+        .map((item) => NearbyHeritageModel.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   /// 지역 필터에 사용할 광역시도 목록을 조회한다.

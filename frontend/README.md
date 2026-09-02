@@ -84,6 +84,20 @@ flutter run
   축제가 열리지 않는 날짜를 아예 고를 수 없게 합니다. (서버에서도 동일하게 검증)
 - `mypage/my_festival_screen.dart`: 찜한 축제와 내 일정을 탭으로 나눠 보여주고 삭제할 수 있습니다.
 
+## 둘러보기 / 알림
+
+- `screens/festival/festival_discover_screen.dart`: **지금 진행 중 / 이번 주말 / 곧 시작** 큐레이션과
+  **내 주변 축제**를 보여줍니다. 주변 축제는 위치 권한이 필요하므로 사용자가 버튼을 눌렀을 때만
+  `geolocator`로 현재 위치를 받아 조회합니다. 권한 거부·위치 서비스 꺼짐 등 실패 사유를 구분해 안내합니다.
+- `screens/festival/festival_detail_screen.dart`: 축제 상세 하단에 **이 축제 주변 문화재**를 가까운 순으로
+  보여줍니다. (좌표가 없는 축제는 해당 섹션이 숨겨집니다)
+- `screens/mypage/notification_screen.dart`: 알림함. 안 읽은 알림은 굵게 표시되고,
+  누르면 읽음 처리 후 연결된 축제 상세로 이동합니다.
+
+> `geolocator`는 플랫폼별 위치 권한 설정이 필요합니다.
+> (Android: `AndroidManifest.xml`의 `ACCESS_FINE_LOCATION`, iOS: `Info.plist`의
+> `NSLocationWhenInUseUsageDescription`) 자세한 내용은 https://pub.dev/packages/geolocator 참고.
+
 ## 마이페이지
 
 `lib/screens/mypage/mypage_screen.dart`에서 아래 기능을 제공합니다.

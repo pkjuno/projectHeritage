@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
 import '../screens/festival/festival_calendar_screen.dart';
+import '../screens/festival/festival_discover_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/mypage/my_festival_screen.dart';
+import '../screens/mypage/notification_screen.dart';
 import '../screens/mypage/mypage_screen.dart';
 import '../screens/splash/splash_screen.dart';
 
@@ -18,6 +20,8 @@ class AppRoutes {
   static const String mypage = '/mypage';
   static const String festivalCalendar = '/festivals/calendar';
   static const String myFestival = '/my-festivals';
+  static const String discover = '/festivals/discover';
+  static const String notifications = '/notifications';
 }
 
 /// 라우트 이름과 실제 화면 위젯을 매핑한다.
@@ -30,4 +34,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.mypage: (context) => const MyPageScreen(),
   AppRoutes.festivalCalendar: (context) => const FestivalCalendarScreen(),
   AppRoutes.myFestival: (context) => const MyFestivalScreen(),
+  AppRoutes.discover: (context) => const FestivalDiscoverScreen(),
+  AppRoutes.notifications: (context) => const NotificationScreen(),
 };
