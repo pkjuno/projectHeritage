@@ -1,0 +1,27 @@
+name: project_heritage_frontend
+description: "Project Heritage - Flutter 프론트엔드 애플리케이션"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 아이콘 팩
+  cupertino_icons: ^1.0.6
+
+  # 백엔드 REST API 통신용 HTTP 클라이언트
+  http: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # 코드 스타일/린트 규칙
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true

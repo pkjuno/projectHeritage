@@ -1,0 +1,21 @@
+# Flutter/Dart 빌드 산출물
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+
+# IDE 설정
+.idea/
+.vscode/
+
+# 플랫폼별 빌드 폴더 (필요 시 flutter create로 재생성)
+android/
+ios/
+web/
+macos/
+linux/
+windows/
+
+# 운영체제 설정 파일
+.DS_Store

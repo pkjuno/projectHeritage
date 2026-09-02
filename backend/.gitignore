@@ -1,0 +1,19 @@
+# 의존성 패키지
+node_modules/
+
+# 환경 변수 파일 (실제 값은 커밋하지 않음)
+.env
+
+# 로그 파일
+logs/
+*.log
+npm-debug.log*
+
+# 운영체제 / 에디터 설정 파일
+.DS_Store
+.vscode/
+.idea/
+
+# 빌드 산출물
+dist/
+build/
