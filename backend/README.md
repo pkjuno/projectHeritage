@@ -104,14 +104,60 @@ Flutter 앱이 각 SNS SDK(kakao_flutter_sdk, flutter_naver_login, google_sign_i
 `from`/`to`는 조회하려는 기간이며, 해당 기간과 축제 개최기간(`startDate`~`endDate`)이
 하루라도 겹치는 축제를 조회합니다. (예: `?from=2026-11-01&to=2026-11-30`)
 
-### 데이터 출처 및 적재 방법
+### 데이터 출처
 
 본 API의 스키마는 공공데이터포털(data.go.kr)의 아래 데이터셋 구조를 참고해 설계했습니다.
-실제 데이터를 채우려면 공공데이터포털 회원가입 및 활용신청(인증키 발급) 후,
-각 Open API 응답을 위 등록 API(`POST /api/heritages`, `POST /api/festivals`) 요청 형태로
-변환해 적재하는 별도의 배치/스크립트를 추가하면 됩니다. (현재 저장소에는 포함되어 있지 않습니다)
 
 - 국가유산청_전국 지정문화재 현황: https://www.data.go.kr/data/15034324/openapi.do
 - 국가유산청_문화재 공간 정보: https://www.data.go.kr/data/3070426/openapi.do
 - 전국문화축제표준데이터: https://www.data.go.kr/data/15013104/standard.do
 - 문화체육관광부_연도별 지역축제 현황: https://www.data.go.kr/data/15119156/fileData.do
+
+## 공공데이터 배치 적재 (Importer)
+
+`src/importers/`에 공공 Open API에서 실제 데이터를 가져와 DB에 적재하는 배치 스크립트가 있습니다.
+
+```bash
+# 문화재 전체 시도 수집/적재
+npm run import:heritage
+
+# 특정 시도만 (서울=11)
+npm run import:heritage -- --sidoCode=11
+
+# DB에 저장하지 않고 수집/매핑만 확인
+npm run import:heritage -- --dry-run
+
+# 원본 응답 1건 + 매핑 결과를 콘솔에 출력 (필드 매핑 검증용, 최초 실행 전 권장)
+npm run import:heritage -- --sample
+
+# 지역축제 수집/적재 (동일한 옵션 지원)
+npm run import:festival -- --sample
+```
+
+### 동작 방식
+
+1. `connectDatabase()`로 DB 연결/스키마 동기화 → `seedSidos()`로 시도 마스터 확인
+2. **문화재**: 국가유산청 "국가유산검색" Open API(`HERITAGE_API_LIST_URL`, 인증키 불필요)를
+   17개 시도코드(`ccbaCtcd`)별로 페이지네이션 조회 → `종목코드(ccbaKdcd)+관리번호(ccbaAsno)+시도` 자연키로 upsert
+3. **지역축제**: `.env`의 `FESTIVAL_API_URL`(+`FESTIVAL_API_SERVICE_KEY`)로 지정한 API를
+   `page`/`perPage` 파라미터로 페이지네이션 조회 → `축제명+시도+시작일` 자연키로 upsert
+4. 재실행해도 같은 레코드는 새로 만들지 않고 갱신만 하므로(idempotent) 크론으로 주기 실행해도 안전합니다.
+5. 공공 API 요청은 실패 시 최대 3회까지 지수 백오프로 재시도합니다.
+
+### ⚠️ 반드시 확인할 것 — 지역축제 API 설정
+
+문화재 API(`HERITAGE_API_LIST_URL`)는 참고자료에 명시된 인증키 불필요 엔드포인트를 기본값으로
+사용하므로 별도 설정 없이 바로 동작합니다.
+
+반면 지역축제는 데이터셋마다 활용신청 후에만 실제 요청 URL/인증키를 알 수 있는 구조이므로,
+**`FESTIVAL_API_URL`/`FESTIVAL_API_SERVICE_KEY`를 직접 채워 넣어야 동작합니다.**
+
+1. data.go.kr에서 "전국문화축제표준데이터"(15013104) 등을 활용신청하고 인증키를 발급받습니다.
+2. 활용신청 상세페이지에 표시되는 "요청 URL"을 `.env`의 `FESTIVAL_API_URL`에 그대로 붙여넣습니다.
+3. `npm run import:festival -- --sample --dry-run`으로 원본 응답 1건을 먼저 확인합니다.
+4. `src/importers/festivalImporter.js`의 `mapItem()` 함수는 표준데이터 명세의 한글 컬럼명
+   (`축제명`, `축제시작일자`, `축제종료일자`, `개최장소` 등) 기준으로 작성되어 있습니다.
+   실제 응답 필드명이 다르면 이 함수만 그에 맞게 수정하면 됩니다.
+
+문화재 쪽도 `--sample`로 원본 `ccceName`(종목명) 표기를 확인한 뒤,
+`heritageImporter.js`의 `mapDesignationType()` 매핑 규칙이 실제 값과 맞는지 검증하는 것을 권장합니다.

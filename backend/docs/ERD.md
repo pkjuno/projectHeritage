@@ -93,3 +93,14 @@ erDiagram
 > 공공데이터포털 Open API 응답 필드는 데이터셋마다 조금씩 다를 수 있으므로, 실제 연동 시
 > `categoryCode`/`managementNo`처럼 원본 API 고유 필드를 별도 컬럼으로 보관해두면
 > 추후 재동기화(재수집) 시 원본 레코드와 매칭하기 용이합니다.
+
+## 배치 적재(Importer) 자연키
+
+`src/importers/`의 배치 스크립트(`npm run import:heritage` / `import:festival`)는 아래 자연키로
+upsert하므로, 동일한 원본 데이터를 여러 번 수집해도 중복 생성되지 않습니다. 자세한 사용법은
+[../README.md의 "공공데이터 배치 적재" 절](../README.md#공공데이터-배치-적재-importer)을 참고하세요.
+
+| 테이블 | 자연키 | 비고 |
+| --- | --- | --- |
+| Heritage | `category_code` + `management_no` + `sido_id` | `uq_heritage_source_key` 유니크 인덱스로 DB 레벨에서도 강제 |
+| Festival | `name` + `sido_id` + `start_date` | 원본에 안정적인 고유 ID가 없어 조합 키 사용 |

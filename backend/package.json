@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "import:heritage": "node src/importers/run.js heritage",
+    "import:festival": "node src/importers/run.js festival"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -17,6 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "fast-xml-parser": "^4.4.1",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",

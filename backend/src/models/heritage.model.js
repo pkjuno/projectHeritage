@@ -95,7 +95,17 @@ Heritage.init(
     modelName: 'Heritage',
     tableName: 'heritages',
     timestamps: true,
-    indexes: [{ fields: ['sido_id'] }, { fields: ['name'] }],
+    indexes: [
+      { fields: ['sido_id'] },
+      { fields: ['name'] },
+      // 국가유산 Open API의 자연키(종목코드+관리번호+시도) 기준 중복 적재 방지.
+      // categoryCode/managementNo가 없는 수동 등록 건은 NULL이라 유니크 제약에 걸리지 않는다.
+      {
+        unique: true,
+        fields: ['category_code', 'management_no', 'sido_id'],
+        name: 'uq_heritage_source_key',
+      },
+    ],
   }
 );
 
