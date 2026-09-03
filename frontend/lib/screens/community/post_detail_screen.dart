@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import '../../config/app_config.dart';
 import '../../models/comment_model.dart';
 import '../../models/post_model.dart';
+import '../../models/user_model.dart';
+import '../../services/user_service.dart';
+import '../../widgets/report_sheet.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
 import '../../theme/app_colors.dart';
@@ -26,7 +29,11 @@ class PostDetailScreen extends StatefulWidget {
 
 class _PostDetailScreenState extends State<PostDetailScreen> {
   final CommunityService _service = CommunityService();
+  final UserService _userService = UserService();
   final TextEditingController _commentController = TextEditingController();
+
+  /// 로그인한 회원. 운영자 메뉴를 보여줄지 판단하는 데 쓴다.
+  UserModel? _me;
 
   PostModel? _post;
   List<CommentModel> _comments = [];
@@ -42,6 +49,17 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadMe();
+  }
+
+  /// 내 정보를 불러온다. 실패해도 화면은 그대로 동작해야 하므로 조용히 넘어간다.
+  Future<void> _loadMe() async {
+    try {
+      final me = await _userService.fetchMe();
+      if (mounted) setState(() => _me = me);
+    } on ApiException {
+      // 비로그인 상태다. 신고/차단/운영자 메뉴가 보이지 않을 뿐이다.
+    }
   }
 
   @override
@@ -265,22 +283,152 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         title: Text(post?.category?.name ?? AppStrings.communityTitle),
         actions: [
           IconButton(icon: const Icon(Icons.share_outlined), onPressed: _share),
-          // 수정/삭제는 내 글일 때만 보여준다. (서버도 동일하게 막는다)
-          if (post != null && post.isMine)
-            PopupMenuButton<String>(
-              onSelected: (value) => value == 'edit' ? _editPost() : _deletePost(),
-              itemBuilder: (context) => [
-                // 숨김 처리된 글은 수정할 수 없다. 수정이 곧 블라인드 해제 우회가 되기 때문이다.
-                if (!post.isHidden)
-                  const PopupMenuItem(value: 'edit', child: Text('수정')),
-                const PopupMenuItem(value: 'delete', child: Text('삭제')),
-              ],
-            ),
+          if (post != null) _buildMenu(post),
         ],
       ),
       body: _buildBody(),
       bottomNavigationBar: post == null ? null : _buildCommentInput(),
     );
+  }
+
+  /// 우상단 메뉴.
+  ///
+  /// 내 글이면 수정/삭제, 남의 글이면 신고/차단, 운영자면 고정/숨김이 붙는다.
+  /// 셋을 한 메뉴에 모으는 이유: 버튼을 나누면 헤더가 아이콘으로 가득 찬다.
+  Widget _buildMenu(PostModel post) {
+    final isAdmin = _me?.isAdmin == true;
+    final canModerate = !post.isMine && _me != null;
+
+    return PopupMenuButton<String>(
+      onSelected: _onMenuSelected,
+      itemBuilder: (context) => [
+        if (post.isMine) ...[
+          // 숨김 처리된 글은 수정할 수 없다. 수정이 곧 블라인드 해제 우회가 되기 때문이다.
+          if (!post.isHidden) const PopupMenuItem(value: 'edit', child: Text('수정')),
+          const PopupMenuItem(value: 'delete', child: Text('삭제')),
+        ],
+        if (canModerate) ...[
+          const PopupMenuItem(value: 'report', child: Text(AppStrings.reportPost)),
+          const PopupMenuItem(value: 'block', child: Text(AppStrings.blockUser)),
+        ],
+        if (isAdmin) ...[
+          const PopupMenuDivider(),
+          PopupMenuItem(
+            value: 'pin',
+            child: Text(post.isPinned ? AppStrings.adminUnpin : AppStrings.adminPin),
+          ),
+          PopupMenuItem(
+            value: 'hide',
+            child: Text(post.isHidden ? AppStrings.adminUnhide : AppStrings.adminHide),
+          ),
+        ],
+      ],
+    );
+  }
+
+  void _onMenuSelected(String value) {
+    switch (value) {
+      case 'edit':
+        _editPost();
+      case 'delete':
+        _deletePost();
+      case 'report':
+        _reportPost();
+      case 'block':
+        _blockAuthor();
+      case 'pin':
+        _togglePinned();
+      case 'hide':
+        _toggleHidden();
+    }
+  }
+
+  /// 글을 신고한다.
+  Future<void> _reportPost() async {
+    final result = await ReportSheet.show(context, targetLabel: '게시글');
+    if (result == null) return;
+
+    try {
+      await _service.reportPost(widget.postId, result.reason, detail: result.detail);
+      _showMessage('신고가 접수되었습니다. 운영자가 확인합니다.');
+    } on ApiException catch (error) {
+      _showMessage(error.message);
+    }
+  }
+
+  /// 댓글을 신고한다.
+  Future<void> _reportComment(CommentModel comment) async {
+    final result = await ReportSheet.show(context, targetLabel: '댓글');
+    if (result == null) return;
+
+    try {
+      await _service.reportComment(comment.id, result.reason, detail: result.detail);
+      _showMessage('신고가 접수되었습니다.');
+    } on ApiException catch (error) {
+      _showMessage(error.message);
+    }
+  }
+
+  /// 작성자를 차단한다.
+  ///
+  /// 차단하면 이 글도 목록에서 사라지므로 확인을 받는다.
+  Future<void> _blockAuthor() async {
+    final author = _post?.author;
+    if (author == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${author.displayName}님을 차단할까요?'),
+        content: const Text(
+          '이 회원의 글과 댓글이 내 화면에서 보이지 않게 됩니다.\n'
+          '상대방에게는 알려지지 않습니다.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('차단')),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await _service.blockUser(author.id);
+      if (!mounted) return;
+      // 차단한 사람의 글에 머물러 있을 이유가 없다.
+      Navigator.of(context).pop(true);
+    } on ApiException catch (error) {
+      _showMessage(error.message);
+    }
+  }
+
+  /// 상단 고정을 토글한다. (운영자)
+  Future<void> _togglePinned() async {
+    final post = _post;
+    if (post == null) return;
+
+    try {
+      await _service.setPinned(post.id, !post.isPinned);
+      _showMessage(post.isPinned ? '고정을 해제했습니다.' : '상단에 고정했습니다.');
+      await _load();
+    } on ApiException catch (error) {
+      _showMessage(error.message);
+    }
+  }
+
+  /// 숨김을 토글한다. (운영자)
+  Future<void> _toggleHidden() async {
+    final post = _post;
+    if (post == null) return;
+
+    try {
+      await _service.setHidden(post.id, !post.isHidden);
+      _showMessage(post.isHidden ? '숨김을 해제했습니다.' : '숨김 처리했습니다.');
+      await _load();
+    } on ApiException catch (error) {
+      _showMessage(error.message);
+    }
   }
 
   Widget _buildBody() {
@@ -304,6 +452,10 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           ],
           const SizedBox(height: AppSizes.paddingLarge),
           Text(post.content ?? '', style: Theme.of(context).textTheme.bodyLarge),
+          if (post.images.isNotEmpty) ...[
+            const SizedBox(height: AppSizes.paddingLarge),
+            _buildImages(post),
+          ],
           const SizedBox(height: AppSizes.paddingLarge),
           _buildReactionBar(post),
           const SizedBox(height: AppSizes.paddingLarge),
@@ -439,6 +591,48 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     );
   }
 
+  /// 첨부 이미지.
+  ///
+  /// 세로로 이어 붙인다. 가로 스크롤로 두면 사진이 몇 장인지 알기 어렵고
+  /// 본문을 읽으며 자연스럽게 넘기는 흐름이 끊긴다.
+  Widget _buildImages(PostModel post) {
+    return Column(
+      children: [
+        for (final image in post.images)
+          Padding(
+            padding: const EdgeInsets.only(bottom: AppSizes.paddingSmall),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                image.fullUrl,
+                width: double.infinity,
+                fit: BoxFit.fitWidth,
+                // 로딩 중 높이가 0이면 아래 내용이 위로 튀어 올랐다가 밀린다.
+                loadingBuilder: (context, child, progress) => progress == null
+                    ? child
+                    : Container(
+                        height: 200,
+                        color: AppColors.surfaceTag,
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                // 파일이 사라졌거나 저장소를 옮긴 뒤 경로가 틀어질 수 있다.
+                errorBuilder: (context, error, stack) => Container(
+                  height: 120,
+                  color: AppColors.surfaceTag,
+                  alignment: Alignment.center,
+                  child: Text(
+                    '사진을 불러올 수 없습니다.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   /// 반응 이모지 줄.
   ///
   /// 다섯 종류를 모두 보여주고, 내가 고른 것만 강조한다.
@@ -472,6 +666,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         onReply: () => setState(() => _replyTarget = comment),
         onToggleLike: () => _toggleCommentLike(comment),
         onDelete: () => _deleteComment(comment),
+        onReport: () => _reportComment(comment),
       ),
       for (final reply in comment.replies)
         Padding(
@@ -483,6 +678,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             onReply: () => setState(() => _replyTarget = comment),
             onToggleLike: () => _toggleCommentLike(reply),
             onDelete: () => _deleteComment(reply),
+            onReport: () => _reportComment(reply),
           ),
         ),
     ];
@@ -622,12 +818,14 @@ class _CommentTile extends StatelessWidget {
   final VoidCallback onReply;
   final VoidCallback onToggleLike;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
 
   const _CommentTile({
     required this.comment,
     required this.onReply,
     required this.onToggleLike,
     required this.onDelete,
+    required this.onReport,
   });
 
   @override
@@ -733,6 +931,9 @@ class _CommentTile extends StatelessWidget {
             if (comment.isMine) ...[
               const SizedBox(width: 16),
               _CommentAction(label: '삭제', onTap: onDelete),
+            ] else ...[
+              const SizedBox(width: 16),
+              _CommentAction(label: '신고', onTap: onReport),
             ],
           ],
         ),

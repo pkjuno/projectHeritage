@@ -1,0 +1,32 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "postId": 9,
+      "reporterId": 3,
+      "reason": "etc",
+      "detail": "테스트 신고입니다.",
+      "status": "pending",
+      "handledBy": null,
+      "handledAt": null,
+      "createdAt": "2026-09-03T07:31:08.000Z",
+      "updatedAt": "2026-09-03T07:31:08.000Z",
+      "reporter": {
+        "id": 3,
+        "name": "이서연",
+        "nickname": "서연"
+      },
+      "post": {
+        "id": 9,
+        "title": "사진 첨부한 글",
+        "status": "published",
+        "userId": 2
+      },
+      "targetType": "post"
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}

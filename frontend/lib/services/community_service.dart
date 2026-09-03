@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import '../models/comment_model.dart';
 import '../models/community_dashboard_model.dart';
+import '../models/moderation_model.dart';
 import '../models/my_activity_model.dart';
 import '../models/post_model.dart';
 import 'api_service.dart';
@@ -101,22 +104,38 @@ class CommunityService {
   }
 
   /// 게시글을 작성한다.
+  ///
+  /// [images]가 있으면 multipart로, 없으면 JSON으로 보낸다.
+  /// 첨부가 없는데도 multipart를 쓰면 요청이 불필요하게 커진다.
   Future<PostModel> createPost({
     required String categoryCode,
     required String title,
     required String content,
     int? festivalId,
+    List<File> images = const [],
   }) async {
-    final data = await _apiService.post(
-      '/community/posts',
-      {
-        'category': categoryCode,
-        'title': title,
-        'content': content,
-        if (festivalId != null) 'festivalId': festivalId,
-      },
-      authorized: true,
-    );
+    final data = images.isEmpty
+        ? await _apiService.post(
+            '/community/posts',
+            {
+              'category': categoryCode,
+              'title': title,
+              'content': content,
+              if (festivalId != null) 'festivalId': festivalId,
+            },
+            authorized: true,
+          )
+        : await _apiService.postMultipart(
+            '/community/posts',
+            fields: {
+              'category': categoryCode,
+              'title': title,
+              'content': content,
+              if (festivalId != null) 'festivalId': '$festivalId',
+            },
+            files: images,
+          );
+
     return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
@@ -231,6 +250,98 @@ class CommunityService {
       authorized: true,
     );
     return (data as Map<String, dynamic>)['shareCount'] as int;
+  }
+
+  // --- 신고 / 차단 ---
+
+  /// 게시글을 신고한다.
+  ///
+  /// 신고해도 글이 즉시 사라지지는 않는다. 판단은 운영자가 한다.
+  Future<void> reportPost(int postId, ReportReason reason, {String? detail}) async {
+    await _apiService.post(
+      '/community/posts/$postId/report',
+      {'reason': reason.code, if (detail != null) 'detail': detail},
+      authorized: true,
+    );
+  }
+
+  /// 댓글을 신고한다.
+  Future<void> reportComment(int commentId, ReportReason reason, {String? detail}) async {
+    await _apiService.post(
+      '/community/comments/$commentId/report',
+      {'reason': reason.code, if (detail != null) 'detail': detail},
+      authorized: true,
+    );
+  }
+
+  /// 회원을 차단한다. 이 회원의 글과 댓글이 내 화면에서만 보이지 않게 된다.
+  Future<void> blockUser(int userId) async {
+    await _apiService.post('/community/me/blocks/$userId', {}, authorized: true);
+  }
+
+  /// 차단을 해제한다.
+  Future<void> unblockUser(int userId) async {
+    await _apiService.delete('/community/me/blocks/$userId', authorized: true);
+  }
+
+  /// 내가 차단한 회원 목록.
+  Future<PagedResult<BlockedUserModel>> fetchBlocks({int page = 1, int limit = 20}) async {
+    final data = await _apiService.get(
+      '/community/me/blocks?page=$page&limit=$limit',
+      authorized: true,
+    );
+    return PagedResult.fromJson(data as Map<String, dynamic>, BlockedUserModel.fromJson);
+  }
+
+  // --- 운영자 ---
+
+  /// 신고 목록을 조회한다. (운영자 전용)
+  Future<PagedResult<ReportModel>> fetchReports({
+    String status = 'pending',
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final data = await _apiService.get(
+      '/community/admin/reports?status=$status&page=$page&limit=$limit',
+      authorized: true,
+    );
+    return PagedResult.fromJson(data as Map<String, dynamic>, ReportModel.fromJson);
+  }
+
+  /// 신고를 처리한다. (운영자 전용)
+  ///
+  /// [hide]가 true면 대상 글/댓글도 함께 숨긴다.
+  /// 신고 처리와 숨김은 별개의 판단이라 자동으로 엮지 않는다.
+  Future<void> handleReport(
+    ReportModel report, {
+    required String status,
+    bool hide = false,
+  }) async {
+    await _apiService.patch(
+      '/community/admin/reports/${report.targetType}/${report.id}',
+      {'status': status, 'hide': hide},
+      authorized: true,
+    );
+  }
+
+  /// 게시글 상단 고정을 토글한다. (운영자 전용)
+  Future<PostModel> setPinned(int postId, bool isPinned) async {
+    final data = await _apiService.patch(
+      '/community/posts/$postId/pin',
+      {'isPinned': isPinned},
+      authorized: true,
+    );
+    return PostModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  /// 게시글 숨김을 토글한다. (운영자 전용)
+  Future<PostModel> setHidden(int postId, bool hidden) async {
+    final data = await _apiService.patch(
+      '/community/posts/$postId/hide',
+      {'hidden': hidden},
+      authorized: true,
+    );
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   // --- 내 활동 ---

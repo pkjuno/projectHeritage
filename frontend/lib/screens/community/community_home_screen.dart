@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../models/community_dashboard_model.dart';
+import '../../models/user_model.dart';
+import '../../services/user_service.dart';
+import '../admin/report_queue_screen.dart';
+import '../mypage/blocked_users_screen.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
@@ -26,6 +30,10 @@ class CommunityHomeScreen extends StatefulWidget {
 
 class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
   final CommunityService _service = CommunityService();
+  final UserService _userService = UserService();
+
+  /// 로그인한 회원. 운영자 진입점을 보여줄지 판단한다.
+  UserModel? _me;
 
   CommunityDashboardModel? _dashboard;
   List<BoardCategoryModel> _categories = [];
@@ -36,6 +44,17 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadMe();
+  }
+
+  /// 내 정보를 불러온다. 실패해도 화면은 그대로 동작한다.
+  Future<void> _loadMe() async {
+    try {
+      final me = await _userService.fetchMe();
+      if (mounted) setState(() => _me = me);
+    } on ApiException {
+      // 비로그인 상태다. 운영자/차단 메뉴가 보이지 않을 뿐이다.
+    }
   }
 
   /// 대시보드와 게시판 목록을 불러온다.
@@ -102,6 +121,24 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
       appBar: AppBar(
         title: const Text(AppStrings.communityTitle),
         actions: [
+          // 운영자에게만 신고 처리 진입점을 보여준다.
+          // (서버가 403으로 막지만, 보이면 눌러보게 되고 눌러보면 거절당한다)
+          if (_me?.isAdmin == true)
+            IconButton(
+              icon: const Icon(Icons.flag_outlined),
+              tooltip: AppStrings.reportQueueTitle,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ReportQueueScreen()),
+              ),
+            ),
+          if (_me != null)
+            IconButton(
+              icon: const Icon(Icons.block),
+              tooltip: AppStrings.blockedListTitle,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BlockedUsersScreen()),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             tooltip: AppStrings.myActivityTitle,

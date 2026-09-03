@@ -1,9 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:project_heritage_frontend/models/comment_model.dart';
+import 'package:project_heritage_frontend/models/moderation_model.dart';
 import 'package:project_heritage_frontend/models/community_dashboard_model.dart';
 import 'package:project_heritage_frontend/models/my_activity_model.dart';
 import 'package:project_heritage_frontend/models/notification_model.dart';
 import 'package:project_heritage_frontend/models/post_model.dart';
+import 'package:project_heritage_frontend/models/user_model.dart';
 import 'package:project_heritage_frontend/services/community_service.dart';
 import 'package:project_heritage_frontend/utils/reaction_types.dart';
 
@@ -383,6 +385,131 @@ void main() {
 
       expect(notification.isCommunity, isFalse);
       expect(notification.festivalId, 5);
+    });
+  });
+
+  group('첨부 이미지', () {
+    test('상대 경로에 서버 주소를 붙인다', () {
+      final image = PostImageModel.fromJson({
+        'id': 1,
+        'url': '/uploads/posts/abc.jpg',
+        'sortOrder': 0,
+      });
+
+      expect(image.fullUrl, startsWith('http'));
+      expect(image.fullUrl, endsWith('/uploads/posts/abc.jpg'));
+    });
+
+    test('전체 URL은 그대로 쓴다', () {
+      // 저장소를 S3로 옮기면 서버가 전체 URL을 준다. 두 경우 모두 다뤄야 한다.
+      final image = PostImageModel.fromJson({
+        'id': 1,
+        'url': 'https://cdn.example.com/posts/abc.jpg',
+      });
+
+      expect(image.fullUrl, 'https://cdn.example.com/posts/abc.jpg');
+    });
+
+    test('목록 응답처럼 images가 없으면 빈 목록', () {
+      final post = PostModel.fromJson({
+        'id': 1,
+        'title': 'x',
+        'createdAt': '2026-09-03T10:00:00.000Z',
+      });
+
+      expect(post.images, isEmpty);
+    });
+
+    test('상세 응답의 이미지를 순서대로 담는다', () {
+      final post = PostModel.fromJson({
+        'id': 1,
+        'title': 'x',
+        'createdAt': '2026-09-03T10:00:00.000Z',
+        'images': [
+          {'id': 1, 'url': '/uploads/posts/a.jpg', 'sortOrder': 0},
+          {'id': 2, 'url': '/uploads/posts/b.jpg', 'sortOrder': 1},
+        ],
+      });
+
+      expect(post.images.map((i) => i.sortOrder), [0, 1]);
+    });
+  });
+
+  group('신고 사유', () {
+    test('서버 ENUM과 같은 5종을 정의한다', () {
+      expect(
+        ReportReason.values.map((r) => r.code),
+        ['spam', 'abuse', 'adult', 'commercial', 'etc'],
+      );
+    });
+
+    test("'기타'만 설명을 요구한다", () {
+      // 설명 없는 '기타' 신고는 운영자가 무엇을 봐야 할지 알 수 없다.
+      expect(ReportReason.etc.requiresDetail, isTrue);
+      for (final reason in ReportReason.values.where((r) => r != ReportReason.etc)) {
+        expect(reason.requiresDetail, isFalse, reason: '\${reason.code}');
+      }
+    });
+  });
+
+  group('ReportModel', () {
+    test('게시글 신고를 파싱한다', () {
+      final report = ReportModel.fromJson({
+        'id': 1,
+        'targetType': 'post',
+        'reason': 'spam',
+        'detail': null,
+        'status': 'pending',
+        'createdAt': '2026-09-03T10:00:00.000Z',
+        'reporter': {'id': 2, 'name': '홍길동', 'nickname': '길동이'},
+        'post': {'id': 10, 'title': '신고된 글', 'status': 'published'},
+      });
+
+      expect(report.isPost, isTrue);
+      expect(report.reasonLabel, '광고 / 스팸');
+      expect(report.targetSummary, '신고된 글');
+      expect(report.post?.isHidden, isFalse);
+    });
+
+    test('댓글 신고를 파싱한다', () {
+      final report = ReportModel.fromJson({
+        'id': 2,
+        'targetType': 'comment',
+        'reason': 'abuse',
+        'status': 'pending',
+        'createdAt': '2026-09-03T10:00:00.000Z',
+        'comment': {'id': 5, 'postId': 10, 'content': '문제 댓글', 'status': 'published'},
+      });
+
+      expect(report.isPost, isFalse);
+      expect(report.targetSummary, '문제 댓글');
+      // 신고자가 탈퇴한 경우에도 목록이 깨지지 않아야 한다.
+      expect(report.reporter, isNull);
+    });
+
+    test('대상이 이미 가려졌는지 알 수 있다', () {
+      final report = ReportModel.fromJson({
+        'id': 1,
+        'targetType': 'post',
+        'reason': 'spam',
+        'status': 'pending',
+        'createdAt': '2026-09-03T10:00:00.000Z',
+        'post': {'id': 10, 'title': '숨겨진 글', 'status': 'hidden'},
+      });
+
+      // 운영자가 중복 조치하지 않도록 표시해야 한다.
+      expect(report.post?.isHidden, isTrue);
+    });
+  });
+
+  group('UserModel 권한', () {
+    test('운영자를 구분한다', () {
+      final base = {'id': 1, 'email': 'a@b.com', 'name': '홍길동'};
+
+      expect(UserModel.fromJson({...base, 'role': 'admin'}).isAdmin, isTrue);
+      expect(UserModel.fromJson({...base, 'role': 'user'}).isAdmin, isFalse);
+      // role이 없으면 일반 회원으로 본다. 권한을 기본값으로 주면 안 된다.
+      expect(UserModel.fromJson(base).isAdmin, isFalse);
     });
   });
 }

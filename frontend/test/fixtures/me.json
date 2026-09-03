@@ -1,0 +1,16 @@
+{
+  "id": 1,
+  "email": "redacted@example.com",
+  "name": "관리자",
+  "nickname": "관리자",
+  "profileImageUrl": null,
+  "pushEnabled": true,
+  "pushToken": null,
+  "role": "admin",
+  "status": "active",
+  "withdrawnAt": null,
+  "createdAt": "2026-09-03T02:17:10.000Z",
+  "updatedAt": "2026-09-03T07:31:08.000Z",
+  "socialAccounts": [],
+  "hasPassword": true
+}

@@ -106,6 +106,20 @@ class AppStrings {
   static const String festivalReviewSection = '이 축제 후기';
   static const String writeReview = '후기 쓰기';
   static const String selectFestival = '축제 선택';
+  static const String attachImages = '사진 첨부';
+
+  // 신고 / 차단 / 운영자
+  static const String reportPost = '게시글 신고';
+  static const String reportComment = '댓글 신고';
+  static const String blockUser = '이 회원 차단';
+  static const String unblockUser = '차단 해제';
+  static const String blockedListTitle = '차단한 회원';
+  static const String emptyBlocked = '차단한 회원이 없습니다.';
+  static const String reportQueueTitle = '신고 처리';
+  static const String adminPin = '상단 고정';
+  static const String adminUnpin = '고정 해제';
+  static const String adminHide = '숨김 처리';
+  static const String adminUnhide = '숨김 해제';
 }
 
 /// 앱 전역에서 재사용하는 여백/크기 값 모음.

@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:project_heritage_frontend/models/comment_model.dart';
 import 'package:project_heritage_frontend/models/community_dashboard_model.dart';
 import 'package:project_heritage_frontend/models/my_activity_model.dart';
+import 'package:project_heritage_frontend/models/moderation_model.dart';
 import 'package:project_heritage_frontend/models/notification_model.dart';
+import 'package:project_heritage_frontend/models/user_model.dart';
 import 'package:project_heritage_frontend/models/post_model.dart';
 import 'package:project_heritage_frontend/services/community_service.dart';
 
@@ -202,6 +204,112 @@ void main() {
       for (final notification in community) {
         expect(notification.postId, isNotNull);
       }
+    });
+  });
+
+  group('이미지 첨부 응답', () {
+    test('상세에 첨부 이미지가 순서대로 온다', () {
+      final post = PostModel.fromJson(
+        loadFixture('post_detail_with_images.json') as Map<String, dynamic>,
+      );
+
+      expect(post.images, isNotEmpty, reason: '픽스처에 첨부 이미지가 있어야 한다');
+      expect(post.images.map((i) => i.sortOrder), [0, 1]);
+      // 서버가 상대 경로를 주므로 앱이 서버 주소를 붙여야 한다.
+      expect(post.images.first.url, startsWith('/uploads/posts/'));
+      expect(post.images.first.fullUrl, startsWith('http'));
+    });
+
+    test('목록에는 이미지가 오지 않는다', () {
+      final raw = loadFixture('post_list.json') as Map<String, dynamic>;
+
+      // 20건마다 이미지 배열이 붙으면 첫 화면 응답이 커진다.
+      for (final item in raw['items'] as List<dynamic>) {
+        expect((item as Map<String, dynamic>).containsKey('images'), isFalse);
+      }
+    });
+
+    test('목록에는 본문 대신 preview가 온다', () {
+      final raw = loadFixture('post_list.json') as Map<String, dynamic>;
+      final items = raw['items'] as List<dynamic>;
+
+      expect(items, isNotEmpty);
+      for (final item in items) {
+        final map = item as Map<String, dynamic>;
+        expect(map.containsKey('content'), isFalse);
+        expect(map.containsKey('preview'), isTrue);
+      }
+
+      final post = PostModel.fromJson(items.first as Map<String, dynamic>);
+      expect(post.summaryText, isNotNull);
+    });
+  });
+
+  group('운영자 신고 목록 응답', () {
+    test('신고를 모델로 변환한다', () {
+      final raw = loadFixture('admin_reports.json') as Map<String, dynamic>;
+      final result = PagedResult.fromJson(raw, ReportModel.fromJson);
+
+      expect(result.items, isNotEmpty, reason: '픽스처에 신고가 있어야 한다');
+
+      final report = result.items.first;
+      // targetType이 없으면 게시글 신고인지 댓글 신고인지 구분할 수 없다.
+      expect(['post', 'comment'], contains(report.targetType));
+      expect(report.targetSummary, isNotEmpty);
+      expect(report.reasonLabel, isNotEmpty);
+    });
+
+    test("'기타' 신고의 설명이 함께 온다", () {
+      final raw = loadFixture('admin_reports.json') as Map<String, dynamic>;
+      final items = PagedResult.fromJson(raw, ReportModel.fromJson).items;
+      final etc = items.where((r) => r.reason == 'etc');
+
+      expect(etc, isNotEmpty);
+      // 설명이 안 오면 운영자가 무엇을 봐야 할지 알 수 없다.
+      for (final report in etc) {
+        expect(report.detail, isNotNull);
+      }
+    });
+  });
+
+  group('차단 목록 응답', () {
+    test('차단한 회원을 모델로 변환한다', () {
+      final raw = loadFixture('blocks.json') as Map<String, dynamic>;
+      final result = PagedResult.fromJson(raw, BlockedUserModel.fromJson);
+
+      expect(result.items, isNotEmpty);
+      expect(result.items.first.blockedUser.displayName, isNotEmpty);
+    });
+
+    test('차단 목록에 상대의 민감정보가 없다', () {
+      final raw = loadFixture('blocks.json') as Map<String, dynamic>;
+
+      for (final item in raw['items'] as List<dynamic>) {
+        final user = (item as Map<String, dynamic>)['blockedUser'] as Map<String, dynamic>;
+        expect(user.containsKey('email'), isFalse);
+        expect(user.containsKey('password'), isFalse);
+      }
+    });
+  });
+
+  group('내 정보 응답', () {
+    // 이 픽스처의 email 값은 저장소에 남기지 않으려고 치환했다.
+    // 계약 테스트가 확인하는 것은 "어떤 키가 오는가"이지 값이 아니다.
+    test('운영자 여부를 판단할 role이 온다', () {
+      final me = UserModel.fromJson(loadFixture('me.json') as Map<String, dynamic>);
+
+      // 이 값이 없으면 앱이 운영자 메뉴를 보여줄 근거가 사라진다.
+      expect(me.role, 'admin');
+      expect(me.isAdmin, isTrue);
+    });
+
+    test('내 정보에도 비밀번호와 토큰은 오지 않는다', () {
+      final raw = loadFixture('me.json') as Map<String, dynamic>;
+
+      expect(raw.containsKey('password'), isFalse);
+      expect(raw.containsKey('refreshToken'), isFalse);
+      // hasPassword는 "비밀번호가 있는지"만 알려주는 파생값이라 안전하다.
+      expect(raw.containsKey('hasPassword'), isTrue);
     });
   });
 }

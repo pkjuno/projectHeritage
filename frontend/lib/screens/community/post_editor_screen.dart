@@ -1,10 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../models/festival_model.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
 import '../../services/festival_service.dart';
 import '../../theme/app_colors.dart';
+import '../../config/app_config.dart';
 import '../../utils/constants.dart';
 
 /// 게시글 작성/수정 화면.
@@ -48,6 +52,9 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
 
   List<FestivalModel> _festivals = [];
   int? _selectedFestivalId;
+
+  /// 첨부할 이미지. 수정 모드에서는 쓰지 않는다.
+  final List<File> _images = [];
 
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -159,6 +166,7 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
           title: _titleController.text,
           content: _contentController.text,
           festivalId: _selectedFestivalId,
+          images: _images,
         );
       }
 
@@ -171,6 +179,67 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// 갤러리에서 이미지를 고른다.
+  ///
+  /// 업로드 전에 크기를 줄인다. 요즘 휴대폰 사진은 한 장이 5MB를 넘기 쉬워
+  /// 원본 그대로 보내면 서버의 용량 제한에 걸린다.
+  Future<void> _pickImages() async {
+    final remaining = AppConfig.maxPostImages - _images.length;
+    if (remaining <= 0) {
+      _showMessage('사진은 최대 ${AppConfig.maxPostImages}장까지 첨부할 수 있습니다.');
+      return;
+    }
+
+    final picked = await ImagePicker().pickMultiImage(
+      maxWidth: 1600,
+      imageQuality: 85,
+    );
+    if (picked.isEmpty) return;
+
+    // 서버도 개수를 막지만, 다 고르고 나서 거절당하는 것보다 여기서 자르는 편이 낫다.
+    final accepted = picked.take(remaining).toList();
+
+    setState(() => _images.addAll(accepted.map((file) => File(file.path))));
+
+    if (picked.length > remaining) {
+      _showMessage('사진은 최대 ${AppConfig.maxPostImages}장까지 첨부할 수 있습니다.');
+    }
+  }
+
+  /// 첨부 이미지 선택 칸.
+  Widget _buildImageField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const _FieldLabel(AppStrings.attachImages),
+            const Spacer(),
+            Text(
+              '${_images.length} / ${AppConfig.maxPostImages}',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        SizedBox(
+          height: 76,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              // 추가 버튼은 항상 맨 앞에 둔다. 사진이 늘어나도 위치가 바뀌지 않는다.
+              _AddImageButton(onTap: _pickImages),
+              for (var index = 0; index < _images.length; index += 1)
+                _ImageThumbnail(
+                  file: _images[index],
+                  onRemove: () => setState(() => _images.removeAt(index)),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   void _showMessage(String message) {
@@ -224,6 +293,12 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
                           ? '제목은 2자 이상 입력해 주세요.'
                           : null,
                     ),
+                    // 수정 모드에서는 첨부를 바꾸지 않는다.
+                    // 서버가 수정 시 이미지 교체를 지원하지 않으므로 화면에도 두지 않는다.
+                    if (!_isEditing) ...[
+                      const SizedBox(height: AppSizes.paddingLarge),
+                      _buildImageField(),
+                    ],
                     const SizedBox(height: AppSizes.paddingLarge),
                     const _FieldLabel(AppStrings.postContentLabel),
                     TextFormField(
@@ -350,6 +425,72 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
         onChanged: (id) => setState(() => _selectedFestivalId = id),
           ),
           const _FieldHint('이 게시판은 어떤 축제의 후기인지 선택해야 합니다.'),
+        ],
+      ),
+    );
+  }
+}
+
+/// 사진 추가 버튼.
+class _AddImageButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _AddImageButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSizes.paddingSmall),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(4),
+        child: Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.line),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: const Icon(Icons.add_photo_alternate_outlined, color: AppColors.inkMuted),
+        ),
+      ),
+    );
+  }
+}
+
+/// 선택한 사진 미리보기.
+class _ImageThumbnail extends StatelessWidget {
+  final File file;
+  final VoidCallback onRemove;
+
+  const _ImageThumbnail({required this.file, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: AppSizes.paddingSmall),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.file(file, width: 72, height: 72, fit: BoxFit.cover),
+          ),
+          // 잘못 고른 사진을 뺄 방법이 없으면 처음부터 다시 해야 한다.
+          Positioned(
+            top: 2,
+            right: 2,
+            child: InkWell(
+              onTap: onRemove,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: AppColors.ink.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.close, size: 13, color: AppColors.surface),
+              ),
+            ),
+          ),
         ],
       ),
     );

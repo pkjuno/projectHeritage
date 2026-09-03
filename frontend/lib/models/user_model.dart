@@ -41,6 +41,13 @@ class UserModel {
   /// 비밀번호 보유 여부. false면 간편로그인이 유일한 로그인 수단이다.
   final bool hasPassword;
 
+  /// 회원 등급. 'user' 또는 'admin'.
+  ///
+  /// 이 값은 **화면에 운영자 메뉴를 보여줄지**만 판단한다.
+  /// 실제 권한 검사는 서버가 매 요청마다 DB에서 다시 확인하므로,
+  /// 이 값을 조작해도 운영자 기능이 실행되지는 않는다.
+  final String role;
+
   /// 연결된 간편로그인 목록
   final List<SocialAccountModel> socialAccounts;
 
@@ -51,6 +58,7 @@ class UserModel {
     this.nickname,
     this.profileImageUrl,
     this.hasPassword = false,
+    this.role = 'user',
     this.socialAccounts = const [],
   });
 
@@ -63,6 +71,9 @@ class UserModel {
     if (profileImageUrl!.startsWith('http')) return profileImageUrl;
     return '${AppConfig.serverBaseUrl}$profileImageUrl';
   }
+
+  /// 운영자인지 여부.
+  bool get isAdmin => role == 'admin';
 
   /// 해당 제공자가 이미 연결되어 있는지 확인한다.
   bool isLinked(AuthProvider provider) {
@@ -80,6 +91,7 @@ class UserModel {
       nickname: json['nickname'] as String?,
       profileImageUrl: json['profileImageUrl'] as String?,
       hasPassword: json['hasPassword'] as bool? ?? false,
+      role: json['role'] as String? ?? 'user',
       socialAccounts: rawSocialAccounts
           .map((item) => SocialAccountModel.fromJson(item as Map<String, dynamic>))
           .toList(),

@@ -9,6 +9,11 @@ class AppConfig {
   /// 백엔드 API 기본 주소
   static const String baseUrl = '$serverBaseUrl/api';
 
+  /// 게시글 한 건에 첨부할 수 있는 사진 수.
+  /// 서버의 UPLOAD_MAX_POST_IMAGES와 같은 값이어야 한다.
+  /// 다르면 다 고르고 나서 서버에 거절당한다.
+  static const int maxPostImages = 5;
+
   /// API 요청 타임아웃 시간(초)
   static const int requestTimeoutSeconds = 10;
 

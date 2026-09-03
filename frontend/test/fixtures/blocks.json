@@ -1,0 +1,21 @@
+{
+  "items": [
+    {
+      "id": 1,
+      "userId": 3,
+      "blockedUserId": 4,
+      "createdAt": "2026-09-03T07:31:08.000Z",
+      "updatedAt": "2026-09-03T07:31:08.000Z",
+      "blockedUser": {
+        "id": 4,
+        "name": "최민준",
+        "nickname": "민준",
+        "profileImageUrl": null
+      }
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}

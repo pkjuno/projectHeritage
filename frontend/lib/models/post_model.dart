@@ -1,3 +1,4 @@
+import '../config/app_config.dart';
 import 'festival_model.dart';
 import 'author_model.dart';
 
@@ -121,6 +122,10 @@ class PostModel {
   /// 반응 분포. 상세 응답에만 담긴다.
   final ReactionSummaryModel? reactions;
 
+  /// 첨부 이미지. 상세 응답에만 담긴다.
+  /// 목록에는 싣지 않는다 — 20건마다 배열이 붙으면 첫 화면 응답이 커진다.
+  final List<PostImageModel> images;
+
   const PostModel({
     required this.id,
     required this.title,
@@ -139,6 +144,7 @@ class PostModel {
     this.isMine = false,
     this.myReaction,
     this.reactions,
+    this.images = const [],
   });
 
   /// 운영자가 숨긴 글인지 여부. 작성자에게만 보이며 수정할 수 없다.
@@ -182,6 +188,33 @@ class PostModel {
       reactions: json['reactions'] != null
           ? ReactionSummaryModel.fromJson(json['reactions'] as Map<String, dynamic>)
           : null,
+      images: (json['images'] as List<dynamic>? ?? [])
+          .map((image) => PostImageModel.fromJson(image as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+/// 게시글에 첨부된 이미지 한 장.
+class PostImageModel {
+  final int id;
+
+  /// 서버가 준 경로. 지금은 '/uploads/posts/xxx.jpg' 같은 상대 경로이고,
+  /// 저장소를 S3로 옮기면 전체 URL이 온다. 두 경우 모두 다뤄야 한다.
+  final String url;
+
+  final int sortOrder;
+
+  const PostImageModel({required this.id, required this.url, this.sortOrder = 0});
+
+  /// 실제로 불러올 수 있는 전체 URL.
+  String get fullUrl => url.startsWith('http') ? url : '${AppConfig.serverBaseUrl}$url';
+
+  factory PostImageModel.fromJson(Map<String, dynamic> json) {
+    return PostImageModel(
+      id: json['id'] as int,
+      url: json['url'] as String,
+      sortOrder: json['sortOrder'] as int? ?? 0,
     );
   }
 }

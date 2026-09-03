@@ -1,0 +1,53 @@
+{
+  "id": 9,
+  "categoryId": 2,
+  "userId": 2,
+  "festivalId": null,
+  "title": "사진 첨부한 글",
+  "content": "본문입니다",
+  "status": "published",
+  "isPinned": false,
+  "viewCount": 0,
+  "commentCount": 0,
+  "reactionCount": 0,
+  "shareCount": 0,
+  "deletedAt": null,
+  "createdAt": "2026-09-03T07:31:08.000Z",
+  "updatedAt": "2026-09-03T07:31:08.000Z",
+  "author": {
+    "id": 2,
+    "name": "박지민",
+    "nickname": "지민",
+    "profileImageUrl": null
+  },
+  "category": {
+    "id": 2,
+    "code": "free",
+    "name": "자유게시판"
+  },
+  "festival": null,
+  "images": [
+    {
+      "id": 1,
+      "url": "/uploads/posts/7dbec396-a550-40e9-9802-82cd83901a35.png",
+      "sortOrder": 0
+    },
+    {
+      "id": 2,
+      "url": "/uploads/posts/2c9cff63-8fd4-4a06-b679-2ced7bb6a7c1.png",
+      "sortOrder": 1
+    }
+  ],
+  "reactions": {
+    "total": 0,
+    "byType": {
+      "like": 0,
+      "love": 0,
+      "wow": 0,
+      "sad": 0,
+      "angry": 0
+    },
+    "myReaction": null
+  },
+  "isMine": true
+}

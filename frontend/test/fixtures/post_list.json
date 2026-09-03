@@ -1,136 +1,11 @@
 {
   "items": [
     {
-      "id": 6,
-      "categoryId": 2,
-      "userId": 11,
-      "festivalId": null,
-      "title": "픽스처용 글",
-      "content": "실제 서버 응답을 그대로 저장한다.",
-      "status": "published",
-      "isPinned": false,
-      "viewCount": 0,
-      "commentCount": 3,
-      "reactionCount": 1,
-      "shareCount": 1,
-      "deletedAt": null,
-      "createdAt": "2026-09-03T02:09:53.000Z",
-      "updatedAt": "2026-09-03T02:09:53.000Z",
-      "author": {
-        "id": 11,
-        "name": "픽스처작성자",
-        "nickname": "픽스처작성자",
-        "profileImageUrl": null
-      },
-      "category": {
-        "id": 2,
-        "code": "free",
-        "name": "자유게시판"
-      },
-      "festival": null,
-      "isMine": false,
-      "myReaction": "love"
-    },
-    {
-      "id": 5,
-      "categoryId": 2,
-      "userId": 8,
-      "festivalId": null,
-      "title": "대시보드 확인용 글",
-      "content": "본문",
-      "status": "published",
-      "isPinned": false,
-      "viewCount": 0,
-      "commentCount": 1,
-      "reactionCount": 2,
-      "shareCount": 0,
-      "deletedAt": null,
-      "createdAt": "2026-09-03T01:45:33.000Z",
-      "updatedAt": "2026-09-03T01:45:33.000Z",
-      "author": {
-        "id": 8,
-        "name": "글쓴이",
-        "nickname": "글쓴이",
-        "profileImageUrl": null
-      },
-      "category": {
-        "id": 2,
-        "code": "free",
-        "name": "자유게시판"
-      },
-      "festival": null,
-      "isMine": false,
-      "myReaction": null
-    },
-    {
-      "id": 4,
-      "categoryId": 2,
-      "userId": 5,
-      "festivalId": null,
-      "title": "대시보드 확인용 글",
-      "content": "본문",
-      "status": "published",
-      "isPinned": false,
-      "viewCount": 0,
-      "commentCount": 1,
-      "reactionCount": 2,
-      "shareCount": 0,
-      "deletedAt": null,
-      "createdAt": "2026-09-03T01:45:02.000Z",
-      "updatedAt": "2026-09-03T01:45:02.000Z",
-      "author": {
-        "id": 5,
-        "name": "글쓴이",
-        "nickname": "글쓴이",
-        "profileImageUrl": null
-      },
-      "category": {
-        "id": 2,
-        "code": "free",
-        "name": "자유게시판"
-      },
-      "festival": null,
-      "isMine": false,
-      "myReaction": null
-    },
-    {
-      "id": 3,
+      "id": 9,
       "categoryId": 2,
       "userId": 2,
       "festivalId": null,
-      "title": "반응 테스트 글",
-      "content": "본문",
-      "status": "published",
-      "isPinned": false,
-      "viewCount": 1,
-      "commentCount": 2,
-      "reactionCount": 2,
-      "shareCount": 0,
-      "deletedAt": null,
-      "createdAt": "2026-09-03T01:35:11.000Z",
-      "updatedAt": "2026-09-03T01:35:12.000Z",
-      "author": {
-        "id": 2,
-        "name": "글쓴이",
-        "nickname": "글쓴이",
-        "profileImageUrl": null
-      },
-      "category": {
-        "id": 2,
-        "code": "free",
-        "name": "자유게시판"
-      },
-      "festival": null,
-      "isMine": false,
-      "myReaction": null
-    },
-    {
-      "id": 2,
-      "categoryId": 2,
-      "userId": 1,
-      "festivalId": null,
-      "title": "ë³´ì • í…ŒìŠ¤íŠ¸",
-      "content": "ë³¸ë¬¸",
+      "title": "사진 첨부한 글",
       "status": "published",
       "isPinned": false,
       "viewCount": 0,
@@ -138,12 +13,219 @@
       "reactionCount": 0,
       "shareCount": 0,
       "deletedAt": null,
-      "createdAt": "2026-09-03T01:32:33.000Z",
-      "updatedAt": "2026-09-03T01:32:33.000Z",
+      "createdAt": "2026-09-03T07:31:08.000Z",
+      "updatedAt": "2026-09-03T07:31:08.000Z",
+      "preview": "본문입니다",
+      "author": {
+        "id": 2,
+        "name": "박지민",
+        "nickname": "지민",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 2,
+        "code": "free",
+        "name": "자유게시판"
+      },
+      "festival": null,
+      "isMine": true,
+      "myReaction": null
+    },
+    {
+      "id": 1,
+      "categoryId": 1,
+      "userId": 1,
+      "festivalId": null,
+      "title": "커뮤니티 이용 안내",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 0,
+      "reactionCount": 0,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "축제 후기와 동행 모집을 자유롭게 나눠주세요.\n\n· 후기 게시판은 다녀온 축제를 선택해서 작성해주세요.\n· 광고성 글과 타인을 비방하는 글은 사전 안내 없이 숨김 처리됩니다.\n\n즐거운 커뮤니티가 되도록 함께 지켜주세요.",
       "author": {
         "id": 1,
-        "name": "데모회원",
-        "nickname": "데모회원",
+        "name": "관리자",
+        "nickname": "관리자",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 1,
+        "code": "notice",
+        "name": "공지사항"
+      },
+      "festival": null,
+      "isMine": false,
+      "myReaction": null
+    },
+    {
+      "id": 2,
+      "categoryId": 3,
+      "userId": 2,
+      "festivalId": 1,
+      "title": "서울빛초롱축제 다녀왔어요 (사진 없이 후기만)",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 3,
+      "reactionCount": 3,
+      "shareCount": 1,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "평일 저녁 7시쯤 갔는데 생각보다 사람이 많았습니다.\n청계광장 쪽에서 시작해서 천천히 걸으면 40분 정도 걸려요.\n\n좋았던 점\n- 등이 생각보다 훨씬 크고 정교합니다\n- 다리 위에서 내려다보는 각도가 제일 예뻐요\n\n아쉬운 점\n- 주말 저녁은 사람이 너무 많아서 걷기 힘",
+      "author": {
+        "id": 2,
+        "name": "박지민",
+        "nickname": "지민",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 3,
+        "code": "review",
+        "name": "축제 후기"
+      },
+      "festival": {
+        "id": 1,
+        "name": "서울빛초롱축제",
+        "startDate": "2026-09-02",
+        "endDate": "2026-09-08"
+      },
+      "isMine": true,
+      "myReaction": null
+    },
+    {
+      "id": 3,
+      "categoryId": 3,
+      "userId": 3,
+      "festivalId": 2,
+      "title": "부산불꽃축제 명당 자리 공유합니다",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 2,
+      "reactionCount": 2,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "광안리 해변은 오후 2시면 이미 자리가 없습니다.\n저는 이기대 쪽에서 봤는데 사람도 적고 광안대교 전체가 다 보여서 좋았어요.\n\n돗자리랑 따뜻한 음료 꼭 챙기세요. 밤에 바람이 셉니다.",
+      "author": {
+        "id": 3,
+        "name": "이서연",
+        "nickname": "서연",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 3,
+        "code": "review",
+        "name": "축제 후기"
+      },
+      "festival": {
+        "id": 2,
+        "name": "부산불꽃축제",
+        "startDate": "2026-09-03",
+        "endDate": "2026-09-04"
+      },
+      "isMine": false,
+      "myReaction": "wow"
+    },
+    {
+      "id": 4,
+      "categoryId": 4,
+      "userId": 4,
+      "festivalId": 3,
+      "title": "경주신라문화제 같이 가실 분 구해요",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 1,
+      "reactionCount": 1,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "이번 주말에 경주 당일치기로 다녀오려고 합니다.\n혼자 가려니 심심해서 같이 다니실 분 있으면 좋겠어요.\n\n오전에 황성공원 둘러보고 오후에 첨성대랑 대릉원까지 생각하고 있습니다.\n댓글 남겨주세요!",
+      "author": {
+        "id": 4,
+        "name": "최민준",
+        "nickname": "민준",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 4,
+        "code": "companion",
+        "name": "동행 구해요"
+      },
+      "festival": {
+        "id": 3,
+        "name": "경주신라문화제",
+        "startDate": "2026-09-03",
+        "endDate": "2026-09-06"
+      },
+      "isMine": false,
+      "myReaction": "like"
+    },
+    {
+      "id": 5,
+      "categoryId": 5,
+      "userId": 2,
+      "festivalId": 4,
+      "title": "전주비빔밥축제 주차 어디에 하나요?",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 1,
+      "reactionCount": 0,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "한옥마을 근처는 주차가 어렵다고 들었는데,\n축제 기간에 임시 주차장이 따로 운영되는지 아시는 분 계실까요?",
+      "author": {
+        "id": 2,
+        "name": "박지민",
+        "nickname": "지민",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 5,
+        "code": "question",
+        "name": "질문/답변"
+      },
+      "festival": {
+        "id": 4,
+        "name": "전주비빔밥축제",
+        "startDate": "2026-09-05",
+        "endDate": "2026-09-08"
+      },
+      "isMine": true,
+      "myReaction": null
+    },
+    {
+      "id": 6,
+      "categoryId": 2,
+      "userId": 3,
+      "festivalId": null,
+      "title": "가을에 가기 좋은 축제 추천해주세요",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 2,
+      "reactionCount": 2,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "10월에 휴가를 쓸 수 있게 되어서 어디든 다녀오려고 합니다.\n사람 너무 많지 않고 조용히 걷기 좋은 곳이면 좋겠어요.",
+      "author": {
+        "id": 3,
+        "name": "이서연",
+        "nickname": "서연",
         "profileImageUrl": null
       },
       "category": {
@@ -154,9 +236,76 @@
       "festival": null,
       "isMine": false,
       "myReaction": null
+    },
+    {
+      "id": 7,
+      "categoryId": 2,
+      "userId": 4,
+      "festivalId": null,
+      "title": "축제 갈 때 챙기면 좋은 것들 정리",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 0,
+      "reactionCount": 0,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "몇 군데 다녀보고 정리한 목록입니다.\n\n1. 보조배터리 - 사진 찍다 보면 금방 닳습니다\n2. 얇은 겉옷 - 해 지면 생각보다 춥습니다\n3. 현금 조금 - 아직 카드 안 되는 부스가 있어요\n4. 접이식 돗자리\n\n다들 추가할 거 있으면 댓글 부탁드려요.",
+      "author": {
+        "id": 4,
+        "name": "최민준",
+        "nickname": "민준",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 2,
+        "code": "free",
+        "name": "자유게시판"
+      },
+      "festival": null,
+      "isMine": false,
+      "myReaction": null
+    },
+    {
+      "id": 8,
+      "categoryId": 3,
+      "userId": 2,
+      "festivalId": 5,
+      "title": "제주들불축제는 미리 숙소를 잡으세요",
+      "status": "published",
+      "isPinned": false,
+      "viewCount": 3,
+      "commentCount": 0,
+      "reactionCount": 0,
+      "shareCount": 0,
+      "deletedAt": null,
+      "createdAt": "2026-09-03T02:17:11.000Z",
+      "updatedAt": "2026-09-03T02:17:12.000Z",
+      "preview": "축제 기간에 근처 숙소가 전부 차서 시내에서 묵었습니다.\n렌터카 없으면 이동이 정말 힘드니 참고하세요.",
+      "author": {
+        "id": 2,
+        "name": "박지민",
+        "nickname": "지민",
+        "profileImageUrl": null
+      },
+      "category": {
+        "id": 3,
+        "code": "review",
+        "name": "축제 후기"
+      },
+      "festival": {
+        "id": 5,
+        "name": "제주들불축제",
+        "startDate": "2026-09-11",
+        "endDate": "2026-09-13"
+      },
+      "isMine": true,
+      "myReaction": null
     }
   ],
-  "total": 5,
+  "total": 9,
   "page": 1,
   "limit": 20,
   "totalPages": 1

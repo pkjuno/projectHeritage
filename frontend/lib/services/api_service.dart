@@ -110,6 +110,39 @@ class ApiService {
     return _handleResponse(response);
   }
 
+  /// 여러 파일과 텍스트 필드를 multipart/form-data로 함께 보낸다.
+  ///
+  /// 게시글 작성처럼 "본문 + 첨부 이미지"를 한 번에 보내야 하는 경우에 쓴다.
+  /// 파일이 없으면 일반 post()를 쓰는 편이 낫다. (서버가 JSON도 받는다)
+  Future<dynamic> postMultipart(
+    String path, {
+    required Map<String, String> fields,
+    List<File> files = const [],
+    String fileFieldName = 'images',
+    bool authorized = true,
+  }) async {
+    final uri = Uri.parse('${AppConfig.baseUrl}$path');
+    final request = http.MultipartRequest('POST', uri);
+
+    if (authorized) {
+      final accessToken = await _tokenStorage.readAccessToken();
+      if (accessToken != null) {
+        request.headers['Authorization'] = 'Bearer $accessToken';
+      }
+    }
+
+    request.fields.addAll(fields);
+    for (final file in files) {
+      request.files.add(await http.MultipartFile.fromPath(fileFieldName, file.path));
+    }
+
+    final streamed = await _client
+        .send(request)
+        .timeout(const Duration(seconds: AppConfig.requestTimeoutSeconds));
+
+    return _handleResponse(await http.Response.fromStream(streamed));
+  }
+
   /// DELETE 요청을 보내고 응답 본문(JSON)을 반환한다. (회원탈퇴 등에서 사용)
   Future<dynamic> delete(String path, {bool authorized = false}) async {
     final uri = Uri.parse('${AppConfig.baseUrl}$path');
