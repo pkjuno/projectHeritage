@@ -414,6 +414,84 @@ GET /api/festivals/calendar?year=2026&month=11&sidoCode=11
 
 `post_views`는 (글 x 조회자 x 날짜)만큼 쌓이므로 오래된 행을 지우는 정리 배치가 필요합니다.
 
+### 댓글 / 반응 / 공유 API
+
+| Method | Path | 설명 | 인증 |
+| --- | --- | --- | --- |
+| GET | `/api/community/posts/:id/comments` | 댓글 목록 (대댓글 포함, query: `page`, `limit`) | 선택 |
+| POST | `/api/community/posts/:id/comments` | 댓글 작성 (body: `content`, `parentId`) | O |
+| PUT | `/api/community/comments/:id` | 댓글 수정 (body: `content`) | O (작성자) |
+| DELETE | `/api/community/comments/:id` | 댓글 삭제 | O (작성자/운영자) |
+| POST | `/api/community/comments/:id/like` | 댓글 좋아요 토글 | O |
+| PUT | `/api/community/posts/:id/reaction` | 반응 등록/변경 (body: `type`) | O |
+| DELETE | `/api/community/posts/:id/reaction` | 반응 취소 | O |
+| POST | `/api/community/posts/:id/share` | 공유 기록 (body: `channel`) | O |
+
+#### 좋아요와 공감이 한 테이블인 이유
+
+한 회원은 글 하나에 반응을 **하나만** 남깁니다.
+`like`가 곧 좋아요이고, `love`/`wow`/`sad`/`angry`가 공감입니다.
+'좋아요'에서 '슬퍼요'로 바꾸면 새 행이 생기는 게 아니라 `type`만 갈아탑니다.
+따라서 **종류를 바꿔도 총 반응 수는 변하지 않습니다.**
+
+```jsonc
+// PUT /api/community/posts/1/reaction  {"type": "sad"}
+{
+  "total": 2,
+  "byType": { "like": 1, "love": 0, "wow": 0, "sad": 1, "angry": 0 },
+  "myReaction": "sad"
+}
+```
+
+반응이 없는 타입도 `0`으로 채워 내려줍니다. 화면에서 없는 키를 매번 방어하지 않기 위해서입니다.
+
+토글(`POST .../like`)이 아니라 `PUT`인 이유는, '좋아요 → 슬퍼요' 변경이 토글로는
+표현되지 않기 때문입니다. 하트 버튼 하나만 쓰는 화면이라면
+`PUT {type:'like'}`와 `DELETE`를 번갈아 호출하면 됩니다.
+
+#### 댓글 깊이는 1단계
+
+대댓글에 답글을 달면 그 대댓글이 아니라 **최상위 댓글**에 붙습니다.
+무한 depth는 모바일에서 들여쓰기를 감당할 수 없고 조회가 재귀 쿼리로 갑니다.
+
+목록은 **최상위 댓글 기준으로 페이지를 나누고**, 각 댓글의 대댓글은 모두 함께 내려줍니다.
+대댓글까지 잘라 페이지를 나누면 "답글 3개 중 1개만 보이는" 화면이 나옵니다.
+
+#### 삭제된 댓글
+
+행을 지우지 않고 `status='deleted'`로 두고 내용과 **작성자 정보를 함께 가립니다.**
+내용만 가리고 이름을 남기면 누가 무엇을 지웠는지가 드러납니다.
+
+- 답글이 달려 있으면 → 자리를 남기고 "삭제된 댓글입니다"로 표시 (대화 맥락 유지)
+- 답글이 없으면 → 목록에서 아예 제외 (덩그러니 남을 이유가 없음)
+
+#### 카운터 정합성
+
+카운터 증감은 **원본 변경과 같은 트랜잭션**에서 처리합니다.
+따로 두면 댓글은 달렸는데 목록의 댓글 수는 그대로인 상태가 생깁니다.
+
+감소는 `GREATEST(count - 1, 0)`으로 감싸, 어딘가에서 증가를 빠뜨렸더라도
+"-1개의 댓글"이 화면에 나오지는 않게 했습니다.
+
+그래도 트랜잭션 밖의 사고(배포 중 강제 종료, 과거 데이터 이관)까지 막지는 못하므로
+실제 값과 대조하는 보정 스크립트를 둡니다.
+
+```bash
+npm run community:recount            # 어긋난 항목만 출력 (변경 없음)
+npm run community:recount -- --apply # 실제로 보정
+```
+
+```
+[OK]  게시글 반응 수: 어긋난 행 없음
+[!!]  게시글 댓글 수: 1건 불일치
+        id=2 저장값=99 실제값=0
+      -> 보정 완료
+```
+
+> 보정 기준은 "화면에 보이는 것"입니다. 삭제된 댓글(`status='deleted'`)은 세지 않습니다.
+> 통합 테스트가 API로 만든 데이터의 카운터를 같은 기준으로 대조하므로,
+> 스크립트와 서비스의 계산 기준이 어긋나면 테스트가 실패합니다.
+
 ### 알려진 한계
 
 - **검색**: `LIKE '%키워드%'`라 인덱스를 타지 못합니다. 글이 쌓이면 ngram 파서를 쓰는
@@ -421,7 +499,9 @@ GET /api/festivals/calendar?year=2026&month=11&sidoCode=11
 - **인기순 정렬**: 카운터를 비정규화해 `COUNT(*)` + `GROUP BY`는 없앴지만,
   점수 식으로 정렬하는 부분은 여전히 filesort입니다. 실측 후
   `(category_id, status, reaction_count)` 인덱스를 추가할 수 있습니다.
-- 댓글 / 반응 / 공유 / 대시보드는 아직 없습니다. (`docs/COMMUNITY_PLAN.md` 9장 참고)
+- **공유 수는 자진신고 지표입니다.** 클라이언트가 "공유했다"고 알려준 값이라 실제로
+  전송했는지는 알 수 없습니다. 정확한 유입은 딥링크 파라미터로 따로 측정해야 합니다.
+- 대시보드 / 내 활동 / 알림 연동은 아직 없습니다. (`docs/COMMUNITY_PLAN.md` 9장 참고)
 
 ## 공공데이터 배치 적재 (Importer)
 

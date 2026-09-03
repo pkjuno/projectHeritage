@@ -1,6 +1,8 @@
 const express = require('express');
 const boardCategoryController = require('../controllers/boardCategory.controller');
 const postController = require('../controllers/post.controller');
+const commentController = require('../controllers/comment.controller');
+const reactionController = require('../controllers/reaction.controller');
 const authenticate = require('../middlewares/authenticate');
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate');
 const requireAdmin = require('../middlewares/requireAdmin');
@@ -30,5 +32,21 @@ router.delete('/posts/:id', authenticate, postController.remove);
 // 상단 고정 / 블라인드 처리는 운영자 전용이므로 미들웨어 단계에서 막는다.
 router.patch('/posts/:id/pin', authenticate, requireAdmin, postController.setPinned);
 router.patch('/posts/:id/hide', authenticate, requireAdmin, postController.setHidden);
+
+// --- 댓글 ---
+// 목록은 비회원도 볼 수 있고, 로그인했다면 "내 댓글인지/좋아요했는지"를 함께 내려준다.
+router.get('/posts/:id/comments', optionalAuthenticate, commentController.list);
+router.post('/posts/:id/comments', authenticate, commentController.create);
+router.put('/comments/:id', authenticate, commentController.update);
+router.delete('/comments/:id', authenticate, commentController.remove);
+router.post('/comments/:id/like', authenticate, commentController.toggleLike);
+
+// --- 반응 (좋아요 + 공감) ---
+// 종류를 바꾸는 동작이 있으므로 토글이 아니라 PUT/DELETE로 둔다.
+router.put('/posts/:id/reaction', authenticate, reactionController.set);
+router.delete('/posts/:id/reaction', authenticate, reactionController.remove);
+
+// --- 공유 ---
+router.post('/posts/:id/share', authenticate, postController.share);
 
 module.exports = router;

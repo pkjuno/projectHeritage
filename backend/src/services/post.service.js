@@ -226,6 +226,12 @@ async function getById(postId, req) {
 
   await countViewIfNeeded(post, req);
 
+  // 화면은 "총 12개"와 함께 어떤 이모지가 몇 개인지를 같이 보여줘야 하므로
+  // 총합(reactionCount)만으로는 부족하다. 타입별 분포와 내 반응을 함께 싣는다.
+  // (순환 참조를 피하려고 함수 안에서 require 한다: reaction.service도 post를 다룬다)
+  const reactionService = require('./reaction.service');
+  post.setDataValue('reactions', await reactionService.getSummary(post.id, req.user?.id));
+
   return post;
 }
 

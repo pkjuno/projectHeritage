@@ -1,4 +1,5 @@
 const postService = require('../services/post.service');
+const reactionService = require('../services/reaction.service');
 const { success } = require('../utils/response');
 
 /**
@@ -9,10 +10,13 @@ const { success } = require('../utils/response');
  * @param {Post} post
  * @param {{id: number}} [user] - 로그인한 회원 (없으면 비회원)
  */
-function withPersonalFlags(post, user) {
+function withPersonalFlags(post, user, myReactionMap) {
   return {
     ...post.toJSON(),
     isMine: Boolean(user) && post.userId === user.id,
+    // 목록에서는 글마다 반응을 따로 조회하지 않고 미리 만든 map에서 꺼낸다.
+    // (상세 응답에는 reactions 안에 myReaction이 이미 들어 있다)
+    ...(myReactionMap ? { myReaction: myReactionMap.get(post.id) ?? null } : {}),
   };
 }
 
@@ -23,9 +27,16 @@ function withPersonalFlags(post, user) {
 async function list(req, res, next) {
   try {
     const result = await postService.list(req.query);
+
+    // 목록 한 페이지에 20번의 쿼리가 나가지 않도록 내 반응을 한 번에 조회한다.
+    const myReactionMap = await reactionService.getMyReactionMap(
+      req.user?.id,
+      result.items.map((post) => post.id)
+    );
+
     return success(res, 200, '게시글 목록 조회 성공', {
       ...result,
-      items: result.items.map((post) => withPersonalFlags(post, req.user)),
+      items: result.items.map((post) => withPersonalFlags(post, req.user, myReactionMap)),
     });
   } catch (error) {
     return next(error);
@@ -111,4 +122,21 @@ async function setHidden(req, res, next) {
   }
 }
 
-module.exports = { list, getById, create, update, remove, setPinned, setHidden };
+/**
+ * [POST] /api/community/posts/:id/share
+ * 공유 기록 컨트롤러.
+ */
+async function share(req, res, next) {
+  try {
+    const result = await reactionService.share(
+      req.user.id,
+      Number(req.params.id),
+      req.body.channel
+    );
+    return success(res, 200, '공유가 기록되었습니다.', result);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { list, getById, create, update, remove, setPinned, setHidden, share };

@@ -15,7 +15,8 @@
     "job:reminder": "node src/jobs/run.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:migrate:status": "sequelize-cli db:migrate:status"
+    "db:migrate:status": "sequelize-cli db:migrate:status",
+    "community:recount": "node src/scripts/recountCommunity.js"
   },
   "engines": {
     "node": ">=18.0.0"

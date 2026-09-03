@@ -27,13 +27,15 @@ const sequelize = new Sequelize(config.db.name, config.db.user, config.db.passwo
  *
  * sync는 테스트에서만 사용한다. (테스트 DB는 매번 통째로 다시 만든다)
  *
- * @param {{sync?: boolean, force?: boolean}} [options]
+ * @param {{sync?: boolean, force?: boolean, quiet?: boolean}} [options]
  *   sync  - 모델 정의로 스키마를 만든다. 테스트 전용.
  *   force - 기존 테이블을 지우고 다시 만든다. sync와 함께 테스트에서만 사용.
+ *   quiet - 연결 로그와 SQL 로그를 남기지 않는다.
+ *           출력 자체가 결과물인 CLI 스크립트에서 보고 내용이 묻히지 않게 하기 위함이다.
  * @returns {Promise<void>}
  */
-async function connectDatabase({ sync = false, force = false } = {}) {
-  await sequelize.authenticate();
+async function connectDatabase({ sync = false, force = false, quiet = false } = {}) {
+  await sequelize.authenticate({ logging: quiet ? false : undefined });
 
   if (sync) {
     if (config.env !== 'test') {
@@ -44,7 +46,7 @@ async function connectDatabase({ sync = false, force = false } = {}) {
   }
 
   // 테스트 실행 중에는 로그가 결과 출력에 섞이므로 생략한다.
-  if (config.env !== 'test') {
+  if (config.env !== 'test' && !quiet) {
     console.log(`[DB] MySQL(${config.db.host}:${config.db.port}/${config.db.name}) 연결 성공`);
   }
 }
