@@ -159,9 +159,15 @@ async function resolveFestivalId(category, festivalId) {
  * @param {{category?: string, festivalId?: string, keyword?: string, sort?: string,
  *          page?: string, limit?: string}} query
  */
-async function list(query = {}) {
+async function list(query = {}, currentUserId) {
   const pagination = parsePagination(query);
-  const where = { status: 'published' };
+  let where = { status: 'published' };
+
+  // 차단한 사람의 글은 목록에서 빼준다.
+  // 차단은 삭제가 아니므로 원본은 그대로 두고 조회하는 쪽에서만 걸러낸다.
+  const moderationService = require('./moderation.service');
+  const blockedIds = await moderationService.getBlockedUserIds(currentUserId);
+  where = moderationService.excludeBlocked(where, blockedIds);
 
   // 게시판 필터. 코드로 받으므로 ID로 바꿔준다.
   if (query.category) {

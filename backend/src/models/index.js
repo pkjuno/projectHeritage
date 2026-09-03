@@ -24,6 +24,9 @@ const PostReaction = require('./postReaction.model');
 const CommentLike = require('./commentLike.model');
 const PostView = require('./postView.model');
 const PostShare = require('./postShare.model');
+const PostReport = require('./postReport.model');
+const CommentReport = require('./commentReport.model');
+const UserBlock = require('./userBlock.model');
 
 module.exports = {
   Sido,
@@ -41,4 +44,7 @@ module.exports = {
   CommentLike,
   PostView,
   PostShare,
+  PostReport,
+  CommentReport,
+  UserBlock,
 };

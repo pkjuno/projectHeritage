@@ -26,7 +26,7 @@ function withPersonalFlags(post, user, myReactionMap) {
  */
 async function list(req, res, next) {
   try {
-    const result = await postService.list(req.query);
+    const result = await postService.list(req.query, req.user?.id);
 
     // 목록 한 페이지에 20번의 쿼리가 나가지 않도록 내 반응을 한 번에 조회한다.
     const myReactionMap = await reactionService.getMyReactionMap(

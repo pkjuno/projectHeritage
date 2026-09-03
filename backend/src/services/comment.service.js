@@ -1,4 +1,4 @@
-const { literal } = require('sequelize');
+const { literal, Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const Post = require('../models/post.model');
 const PostComment = require('../models/postComment.model');
@@ -116,9 +116,15 @@ async function list(postId, query = {}, currentUser) {
 
   const pagination = parsePagination(query);
 
+  // 차단한 사람의 댓글도 가려야 한다.
+  // 글만 가리고 댓글이 그대로 보이면 차단이 아니다.
+  const moderationService = require('./moderation.service');
+  const blockedIds = await moderationService.getBlockedUserIds(currentUser?.id);
+  const notBlocked = blockedIds.length > 0 ? { userId: { [Op.notIn]: blockedIds } } : {};
+
   // 1) 최상위 댓글만 페이지네이션해서 가져온다.
   const parents = await PostComment.findAndCountAll({
-    where: { postId, parentId: null },
+    where: { postId, parentId: null, ...notBlocked },
     include: [AUTHOR_INCLUDE],
     limit: pagination.limit,
     offset: pagination.offset,
@@ -130,7 +136,7 @@ async function list(postId, query = {}, currentUser) {
   // 2) 그 댓글들에 달린 대댓글을 한 번에 가져온다. (댓글 수만큼 쿼리하지 않기 위해)
   const replies = parentIds.length
     ? await PostComment.findAll({
-        where: { parentId: parentIds },
+        where: { parentId: parentIds, ...notBlocked },
         include: [AUTHOR_INCLUDE],
         order: [['createdAt', 'ASC']],
       })

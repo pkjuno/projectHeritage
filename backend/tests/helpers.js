@@ -22,6 +22,9 @@ const { seedBoardCategories } = require('../src/seeders/boardCategory.seed');
  */
 async function resetDatabase() {
   const tables = [
+    'user_blocks',
+    'comment_reports',
+    'post_reports',
     'post_shares',
     'post_views',
     'comment_likes',

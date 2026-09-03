@@ -4,6 +4,7 @@ const postController = require('../controllers/post.controller');
 const commentController = require('../controllers/comment.controller');
 const reactionController = require('../controllers/reaction.controller');
 const dashboardController = require('../controllers/communityDashboard.controller');
+const moderationController = require('../controllers/moderation.controller');
 const authenticate = require('../middlewares/authenticate');
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate');
 const requireAdmin = require('../middlewares/requireAdmin');
@@ -56,5 +57,25 @@ router.delete('/posts/:id/reaction', authenticate, reactionController.remove);
 
 // --- 공유 ---
 router.post('/posts/:id/share', authenticate, postController.share);
+
+// --- 신고 ---
+// 신고가 쌓였다고 글이 자동으로 숨겨지지는 않는다. 자동 숨김은 여러 계정으로
+// 신고를 몰아 남의 글을 지우는 도구가 된다. 판단은 운영자가 한다.
+router.post('/posts/:id/report', authenticate, moderationController.reportPost);
+router.post('/comments/:id/report', authenticate, moderationController.reportComment);
+
+// --- 차단 (개인 설정) ---
+router.get('/me/blocks', authenticate, moderationController.listBlocks);
+router.post('/me/blocks/:userId', authenticate, moderationController.blockUser);
+router.delete('/me/blocks/:userId', authenticate, moderationController.unblockUser);
+
+// --- 운영자 처리 ---
+router.get('/admin/reports', authenticate, requireAdmin, moderationController.listReports);
+router.patch(
+  '/admin/reports/:targetType/:id',
+  authenticate,
+  requireAdmin,
+  moderationController.handleReport
+);
 
 module.exports = router;
