@@ -2,6 +2,7 @@ const app = require('./app');
 const config = require('./config');
 const { connectDatabase, sequelize } = require('./config/database');
 const { seedSidos } = require('./seeders/sido.seed');
+const { seedBoardCategories } = require('./seeders/boardCategory.seed');
 const { registerJobs } = require('./jobs');
 
 /**
@@ -41,10 +42,13 @@ async function bootstrap() {
     // 3. 광역시도 마스터 데이터 적재 (문화재/축제 조회의 기준 데이터)
     await seedSidos();
 
-    // 4. 주기 실행 배치 등록 (방문 하루 전 알림 등)
+    // 4. 게시판 마스터 데이터 적재 (커뮤니티 조회의 기준 데이터)
+    await seedBoardCategories();
+
+    // 5. 주기 실행 배치 등록 (방문 하루 전 알림 등)
     registerJobs();
 
-    // 5. HTTP 서버 실행
+    // 6. HTTP 서버 실행
     app.listen(config.port, () => {
       console.log(`[Server] ${config.env} 환경에서 http://localhost:${config.port} 실행 중`);
     });

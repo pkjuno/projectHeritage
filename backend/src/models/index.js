@@ -17,6 +17,13 @@ const SocialAccount = require('./socialAccount.model');
 const FestivalWishlist = require('./festivalWishlist.model');
 const FestivalSchedule = require('./festivalSchedule.model');
 const Notification = require('./notification.model');
+const BoardCategory = require('./boardCategory.model');
+const Post = require('./post.model');
+const PostComment = require('./postComment.model');
+const PostReaction = require('./postReaction.model');
+const CommentLike = require('./commentLike.model');
+const PostView = require('./postView.model');
+const PostShare = require('./postShare.model');
 
 module.exports = {
   Sido,
@@ -27,4 +34,11 @@ module.exports = {
   FestivalWishlist,
   FestivalSchedule,
   Notification,
+  BoardCategory,
+  Post,
+  PostComment,
+  PostReaction,
+  CommentLike,
+  PostView,
+  PostShare,
 };

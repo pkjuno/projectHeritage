@@ -5,6 +5,7 @@ const User = require('../src/models/user.model');
 const Sido = require('../src/models/sido.model');
 const Festival = require('../src/models/festival.model');
 const { seedSidos } = require('../src/seeders/sido.seed');
+const { seedBoardCategories } = require('../src/seeders/boardCategory.seed');
 
 /**
  * 테스트에서 반복적으로 쓰는 도우미 모음.
@@ -19,6 +20,13 @@ const { seedSidos } = require('../src/seeders/sido.seed');
  */
 async function resetDatabase() {
   const tables = [
+    'post_shares',
+    'post_views',
+    'comment_likes',
+    'post_reactions',
+    'post_comments',
+    'posts',
+    'board_categories',
     'notifications',
     'festival_schedules',
     'festival_wishlists',
@@ -35,8 +43,9 @@ async function resetDatabase() {
   }
   await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
 
-  // 시도 마스터는 다른 데이터의 기준이 되므로 항상 다시 채워둔다.
+  // 마스터 데이터는 다른 데이터의 기준이 되므로 항상 다시 채워둔다.
   await seedSidos();
+  await seedBoardCategories();
 }
 
 /**
