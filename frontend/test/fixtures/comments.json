@@ -1,0 +1,79 @@
+{
+  "items": [
+    {
+      "id": 6,
+      "postId": 6,
+      "parentId": null,
+      "content": "부모 댓글",
+      "status": "published",
+      "likeCount": 0,
+      "author": {
+        "id": 12,
+        "name": "픽스처독자",
+        "nickname": "픽스처독자",
+        "profileImageUrl": null
+      },
+      "isMine": true,
+      "isLiked": false,
+      "createdAt": "2026-09-03T02:09:53.000Z",
+      "updatedAt": "2026-09-03T02:09:53.000Z",
+      "replies": [
+        {
+          "id": 7,
+          "postId": 6,
+          "parentId": 6,
+          "content": "답글",
+          "status": "published",
+          "likeCount": 0,
+          "author": {
+            "id": 11,
+            "name": "픽스처작성자",
+            "nickname": "픽스처작성자",
+            "profileImageUrl": null
+          },
+          "isMine": false,
+          "isLiked": false,
+          "createdAt": "2026-09-03T02:09:53.000Z",
+          "updatedAt": "2026-09-03T02:09:53.000Z"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "postId": 6,
+      "parentId": null,
+      "content": "삭제된 댓글입니다.",
+      "status": "deleted",
+      "likeCount": 0,
+      "author": null,
+      "isMine": false,
+      "isLiked": false,
+      "createdAt": "2026-09-03T02:09:53.000Z",
+      "updatedAt": "2026-09-03T02:09:53.000Z",
+      "replies": [
+        {
+          "id": 9,
+          "postId": 6,
+          "parentId": 8,
+          "content": "삭제될 댓글의 답글",
+          "status": "published",
+          "likeCount": 0,
+          "author": {
+            "id": 11,
+            "name": "픽스처작성자",
+            "nickname": "픽스처작성자",
+            "profileImageUrl": null
+          },
+          "isMine": false,
+          "isLiked": false,
+          "createdAt": "2026-09-03T02:09:53.000Z",
+          "updatedAt": "2026-09-03T02:09:53.000Z"
+        }
+      ]
+    }
+  ],
+  "total": 2,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1
+}

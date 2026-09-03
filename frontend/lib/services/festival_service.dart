@@ -31,6 +31,30 @@ class FestivalService {
     return FestivalCalendarModel.fromJson(data as Map<String, dynamic>);
   }
 
+  /// 축제 목록을 조회한다.
+  ///
+  /// 커뮤니티 후기 작성 화면에서 "어떤 축제 후기인지" 고르는 데 쓴다.
+  /// 목록 API는 페이지네이션 응답이므로 items만 꺼내 돌려준다.
+  Future<List<FestivalModel>> fetchFestivals({
+    String? sidoCode,
+    String? keyword,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    final query = <String, String>{
+      'page': '$page',
+      'limit': '$limit',
+      if (sidoCode != null && sidoCode.isNotEmpty) 'sidoCode': sidoCode,
+      if (keyword != null && keyword.trim().isNotEmpty) 'keyword': keyword.trim(),
+    };
+
+    final data = await _apiService.get('/festivals?${Uri(queryParameters: query).query}');
+    final items = (data as Map<String, dynamic>)['items'] as List<dynamic>;
+    return items
+        .map((item) => FestivalModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
   /// 축제 상세 정보를 조회한다.
   /// 로그인 상태로 호출하면 위시리스트 담김 여부(isWishlisted)가 함께 내려온다.
   Future<FestivalModel> fetchDetail(int festivalId) async {

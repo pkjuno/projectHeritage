@@ -4,6 +4,7 @@ import '../../models/notification_model.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/constants.dart';
+import '../community/post_detail_screen.dart';
 import '../festival/festival_detail_screen.dart';
 
 /// 알림함 화면.
@@ -57,7 +58,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  /// 알림을 눌렀을 때: 읽음 처리하고 연결된 축제가 있으면 상세로 이동한다.
+  /// 알림을 눌렀을 때: 읽음 처리하고 연결된 화면으로 이동한다.
+  ///
+  /// 커뮤니티 알림(댓글/답글/반응)은 게시글 상세로, 축제 알림은 축제 상세로 간다.
   Future<void> _openNotification(NotificationModel notification) async {
     if (notification.isUnread) {
       try {
@@ -69,7 +72,13 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
     if (!mounted) return;
 
-    if (notification.festivalId != null) {
+    // 커뮤니티 알림을 먼저 확인한다. 두 ID가 함께 있을 일은 없지만,
+    // 있다면 사용자가 방금 받은 활동(댓글/반응)이 더 관심 있는 대상이다.
+    if (notification.isCommunity) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => PostDetailScreen(postId: notification.postId!)),
+      );
+    } else if (notification.festivalId != null) {
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => FestivalDetailScreen(festivalId: notification.festivalId!),
@@ -140,7 +149,8 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             ),
                           ),
                           subtitle: Text(notification.body),
-                          trailing: notification.festivalId != null
+                          trailing: notification.isCommunity ||
+                                  notification.festivalId != null
                               ? const Icon(Icons.chevron_right)
                               : null,
                           onTap: () => _openNotification(notification),

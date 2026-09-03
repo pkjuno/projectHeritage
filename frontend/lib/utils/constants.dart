@@ -74,6 +74,38 @@ class AppStrings {
   static const String emptyDiscover = '표시할 축제가 없습니다.';
   static const String emptyNearby = '주변에 진행 중인 축제가 없습니다.';
   static const String nearbyHeritageSection = '이 축제 주변 문화재';
+
+  // 커뮤니티
+  static const String communityTitle = '커뮤니티';
+  static const String communityHomeSubtitle = '축제 후기와 동행을 나눠보세요';
+  static const String trendingSection = '지금 인기 있는 글';
+  static const String latestSection = '최신 글';
+  static const String boardSection = '게시판';
+  static const String festivalTalkSection = '이 축제 이야기 중';
+  static const String myActivityTitle = '내 활동';
+  static const String myPostsTab = '내 글';
+  static const String myCommentsTab = '내 댓글';
+  static const String myReactionsTab = '내 반응';
+  static const String writePost = '글쓰기';
+  static const String editPost = '글 수정';
+  static const String deletePostConfirm = '이 글을 삭제하시겠습니까?';
+  static const String deleteCommentConfirm = '이 댓글을 삭제하시겠습니까?';
+  static const String postTitleLabel = '제목';
+  static const String postContentLabel = '내용';
+  static const String commentHint = '댓글을 입력하세요';
+  static const String replyHint = '답글을 입력하세요';
+  static const String commentSection = '댓글';
+  static const String emptyPost = '아직 등록된 글이 없습니다.';
+  static const String emptyComment = '첫 댓글을 남겨보세요.';
+  static const String emptyMyActivity = '아직 활동 내역이 없습니다.';
+  static const String searchHint = '제목 또는 내용 검색';
+  static const String sortLatest = '최신순';
+  static const String sortPopular = '인기순';
+  static const String linkCopied = '링크를 복사했습니다.';
+  static const String hiddenPostNotice = '운영자가 숨김 처리한 글입니다. 수정할 수 없습니다.';
+  static const String festivalReviewSection = '이 축제 후기';
+  static const String writeReview = '후기 쓰기';
+  static const String selectFestival = '축제 선택';
 }
 
 /// 앱 전역에서 재사용하는 여백/크기 값 모음.

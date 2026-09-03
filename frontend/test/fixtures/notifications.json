@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "id": 7,
+      "userId": 11,
+      "type": "post_reaction",
+      "title": "내 글에 반응이 달렸어요",
+      "body": "'픽스처용 글' 글에 반응 1개가 달렸습니다.",
+      "festivalId": null,
+      "postId": 6,
+      "dedupeKey": "post_reaction:6:20260903",
+      "sentAt": null,
+      "readAt": null,
+      "createdAt": "2026-09-03T02:09:53.000Z",
+      "updatedAt": "2026-09-03T02:09:53.000Z",
+      "festival": null,
+      "post": {
+        "id": 6,
+        "title": "픽스처용 글",
+        "status": "published"
+      }
+    },
+    {
+      "id": 5,
+      "userId": 11,
+      "type": "post_comment",
+      "title": "내 글에 댓글이 달렸어요",
+      "body": "'픽스처용 글' 글에 새 댓글이 달렸습니다.",
+      "festivalId": null,
+      "postId": 6,
+      "dedupeKey": "post_comment:8",
+      "sentAt": null,
+      "readAt": null,
+      "createdAt": "2026-09-03T02:09:53.000Z",
+      "updatedAt": "2026-09-03T02:09:53.000Z",
+      "festival": null,
+      "post": {
+        "id": 6,
+        "title": "픽스처용 글",
+        "status": "published"
+      }
+    },
+    {
+      "id": 3,
+      "userId": 11,
+      "type": "post_comment",
+      "title": "내 글에 댓글이 달렸어요",
+      "body": "'픽스처용 글' 글에 새 댓글이 달렸습니다.",
+      "festivalId": null,
+      "postId": 6,
+      "dedupeKey": "post_comment:6",
+      "sentAt": null,
+      "readAt": null,
+      "createdAt": "2026-09-03T02:09:53.000Z",
+      "updatedAt": "2026-09-03T02:09:53.000Z",
+      "festival": null,
+      "post": {
+        "id": 6,
+        "title": "픽스처용 글",
+        "status": "published"
+      }
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "limit": 20,
+  "totalPages": 1,
+  "unreadCount": 3
+}

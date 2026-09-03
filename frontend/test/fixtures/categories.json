@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "code": "notice",
+    "name": "공지사항",
+    "description": "운영자가 알리는 소식",
+    "writeRole": "admin",
+    "requireFestival": false,
+    "sortOrder": 1,
+    "isActive": true,
+    "createdAt": "2026-09-03T01:08:24.000Z",
+    "updatedAt": "2026-09-03T01:08:24.000Z"
+  },
+  {
+    "id": 2,
+    "code": "free",
+    "name": "자유게시판",
+    "description": "무엇이든 자유롭게",
+    "writeRole": "user",
+    "requireFestival": false,
+    "sortOrder": 2,
+    "isActive": true,
+    "createdAt": "2026-09-03T01:08:24.000Z",
+    "updatedAt": "2026-09-03T01:08:24.000Z"
+  },
+  {
+    "id": 3,
+    "code": "review",
+    "name": "축제 후기",
+    "description": "다녀온 축제 이야기",
+    "writeRole": "user",
+    "requireFestival": true,
+    "sortOrder": 3,
+    "isActive": true,
+    "createdAt": "2026-09-03T01:08:24.000Z",
+    "updatedAt": "2026-09-03T01:08:24.000Z"
+  },
+  {
+    "id": 4,
+    "code": "companion",
+    "name": "동행 구해요",
+    "description": "같이 갈 사람을 찾아보세요",
+    "writeRole": "user",
+    "requireFestival": false,
+    "sortOrder": 4,
+    "isActive": true,
+    "createdAt": "2026-09-03T01:08:24.000Z",
+    "updatedAt": "2026-09-03T01:08:24.000Z"
+  },
+  {
+    "id": 5,
+    "code": "question",
+    "name": "질문/답변",
+    "description": "궁금한 것을 물어보세요",
+    "writeRole": "user",
+    "requireFestival": false,
+    "sortOrder": 5,
+    "isActive": true,
+    "createdAt": "2026-09-03T01:08:24.000Z",
+    "updatedAt": "2026-09-03T01:08:24.000Z"
+  }
+]

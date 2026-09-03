@@ -1,0 +1,41 @@
+{
+  "id": 6,
+  "categoryId": 2,
+  "userId": 11,
+  "festivalId": null,
+  "title": "픽스처용 글",
+  "content": "실제 서버 응답을 그대로 저장한다.",
+  "status": "published",
+  "isPinned": false,
+  "viewCount": 1,
+  "commentCount": 3,
+  "reactionCount": 1,
+  "shareCount": 1,
+  "deletedAt": null,
+  "createdAt": "2026-09-03T02:09:53.000Z",
+  "updatedAt": "2026-09-03T02:09:53.000Z",
+  "author": {
+    "id": 11,
+    "name": "픽스처작성자",
+    "nickname": "픽스처작성자",
+    "profileImageUrl": null
+  },
+  "category": {
+    "id": 2,
+    "code": "free",
+    "name": "자유게시판"
+  },
+  "festival": null,
+  "reactions": {
+    "total": 1,
+    "byType": {
+      "like": 0,
+      "love": 1,
+      "wow": 0,
+      "sad": 0,
+      "angry": 0
+    },
+    "myReaction": "love"
+  },
+  "isMine": false
+}

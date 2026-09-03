@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/signup_screen.dart';
+import '../screens/community/community_home_screen.dart';
+import '../screens/community/my_activity_screen.dart';
 import '../screens/festival/festival_calendar_screen.dart';
 import '../screens/festival/festival_discover_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -22,6 +24,8 @@ class AppRoutes {
   static const String myFestival = '/my-festivals';
   static const String discover = '/festivals/discover';
   static const String notifications = '/notifications';
+  static const String community = '/community';
+  static const String myActivity = '/community/me';
 }
 
 /// 라우트 이름과 실제 화면 위젯을 매핑한다.
@@ -36,4 +40,6 @@ final Map<String, WidgetBuilder> appRoutes = {
   AppRoutes.myFestival: (context) => const MyFestivalScreen(),
   AppRoutes.discover: (context) => const FestivalDiscoverScreen(),
   AppRoutes.notifications: (context) => const NotificationScreen(),
+  AppRoutes.community: (context) => const CommunityHomeScreen(),
+  AppRoutes.myActivity: (context) => const MyActivityScreen(),
 };

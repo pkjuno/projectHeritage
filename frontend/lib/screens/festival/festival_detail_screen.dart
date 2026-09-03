@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import '../../models/festival_model.dart';
 import '../../models/nearby_model.dart';
 import '../../services/api_service.dart';
+import '../../services/community_service.dart';
 import '../../services/festival_service.dart';
 import '../../services/schedule_service.dart';
 import '../../services/wishlist_service.dart';
 import '../../utils/constants.dart';
+import '../../models/post_model.dart';
+import '../community/post_list_screen.dart';
+import '../community/post_detail_screen.dart';
+import '../community/post_editor_screen.dart';
 
 /// 축제 상세 화면.
 /// 상세 정보를 보여주고, 위시리스트에 담거나 방문 일정을 추가할 수 있다.
@@ -23,11 +28,18 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
   final FestivalService _festivalService = FestivalService();
   final WishlistService _wishlistService = WishlistService();
   final ScheduleService _scheduleService = ScheduleService();
+  final CommunityService _communityService = CommunityService();
 
   FestivalModel? _festival;
 
   /// 이 축제 주변의 문화재. 좌표가 없는 축제는 비어 있다.
   List<NearbyHeritageModel> _nearbyHeritages = [];
+
+  /// 이 축제에 연결된 후기 글 미리보기 (최대 3건)
+  List<PostModel> _reviews = [];
+
+  /// 이 축제에 달린 전체 글 수. 미리보기는 3건뿐이라 "더보기"에는 전체 수가 필요하다.
+  int _reviewTotal = 0;
 
   bool _isLoading = true;
   bool _isSubmitting = false;
@@ -46,8 +58,8 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
       if (!mounted) return;
       setState(() => _festival = festival);
 
-      // 주변 문화재는 부가 정보라, 실패해도 상세 화면 자체는 그대로 보여준다.
-      await _loadNearbyHeritages();
+      // 주변 문화재와 후기는 부가 정보라, 실패해도 상세 화면 자체는 그대로 보여준다.
+      await Future.wait([_loadNearbyHeritages(), _loadReviews()]);
     } on ApiException catch (error) {
       _showMessage(error.message);
     } catch (_) {
@@ -58,6 +70,26 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
   }
 
   /// 이 축제 주변의 문화재를 불러온다. (좌표가 없으면 서버가 400을 주므로 조용히 넘어간다)
+  /// 이 축제에 연결된 후기 글을 불러온다.
+  ///
+  /// 축제 정보 조회와 별개로 실패할 수 있으므로 따로 처리한다.
+  /// 커뮤니티 조회가 실패해도 축제 상세 자체는 보여야 한다.
+  Future<void> _loadReviews() async {
+    try {
+      final result = await _communityService.fetchPosts(
+        festivalId: widget.festivalId,
+        limit: 3,
+      );
+      if (!mounted) return;
+      setState(() {
+        _reviews = result.items;
+        _reviewTotal = result.total;
+      });
+    } on ApiException {
+      // 후기는 부가 정보다. 실패해도 축제 상세를 막지 않는다.
+    }
+  }
+
   Future<void> _loadNearbyHeritages() async {
     try {
       final heritages = await _festivalService.fetchNearbyHeritages(widget.festivalId);
@@ -205,6 +237,7 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
                       const SizedBox(height: AppSizes.paddingSmall),
                       Text(festival.description!),
                     ],
+                    _buildReviewSection(),
                     if (_nearbyHeritages.isNotEmpty) ...[
                       const Divider(height: AppSizes.paddingLarge * 2),
                       Text(
@@ -260,6 +293,97 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
   }
 
   /// 아이콘 + 라벨 + 값 형태의 정보 한 줄. 값이 없으면 렌더링하지 않는다.
+  /// 이 축제 후기 섹션.
+  ///
+  /// 축제와 커뮤니티를 잇는 자리다. 글이 없어도 "후기 쓰기" 버튼은 보여준다.
+  /// 첫 후기를 남길 통로가 없으면 이 섹션은 영원히 비어 있게 된다.
+  Widget _buildReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(height: AppSizes.paddingLarge * 2),
+        Row(
+          children: [
+            Text(
+              '${AppStrings.festivalReviewSection} $_reviewTotal',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: _writeReview,
+              icon: const Icon(Icons.edit, size: 16),
+              label: const Text(AppStrings.writeReview),
+            ),
+          ],
+        ),
+        if (_reviews.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSizes.paddingMedium),
+            child: Text(AppStrings.emptyPost),
+          )
+        else ...[
+          ..._reviews.map(
+            (post) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(post.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: const Text(
+                '\${post.authorLabel} · 댓글 \${post.commentCount} · 반응 \${post.reactionCount}',
+              ),
+              onTap: () => _openReview(post),
+            ),
+          ),
+          // 미리보기는 3건뿐이므로 그보다 많으면 전체 목록으로 갈 길을 만든다.
+          if (_reviewTotal > _reviews.length)
+            TextButton(
+              onPressed: _openReviewList,
+              child: const Text('후기 \$_reviewTotal개 모두 보기'),
+            ),
+        ],
+      ],
+    );
+  }
+
+  /// 이 축제 후기를 쓴다. 축제가 이미 정해져 있으므로 작성 화면에서 고르지 않는다.
+  Future<void> _writeReview() async {
+    final festival = _festival;
+    if (festival == null) return;
+
+    final created = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => PostEditorScreen(
+          fixedFestivalId: festival.id,
+          fixedFestivalName: festival.name,
+        ),
+      ),
+    );
+
+    if (created == true) await _loadReviews();
+  }
+
+  /// 후기 상세로 이동한다. 돌아오면 목록을 갱신한다. (삭제됐을 수 있다)
+  Future<void> _openReview(PostModel post) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => PostDetailScreen(postId: post.id)),
+    );
+    if (mounted) await _loadReviews();
+  }
+
+  /// 이 축제의 후기 전체 목록으로 이동한다.
+  Future<void> _openReviewList() async {
+    final festival = _festival;
+    if (festival == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PostListScreen(
+          festivalId: festival.id,
+          festivalName: festival.name,
+        ),
+      ),
+    );
+    if (mounted) await _loadReviews();
+  }
+
   Widget _buildInfoRow(IconData icon, String label, String? value) {
     if (value == null || value.isEmpty) return const SizedBox.shrink();
 

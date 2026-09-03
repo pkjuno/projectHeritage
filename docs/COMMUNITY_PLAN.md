@@ -331,7 +331,7 @@ score = reaction_count * 3 + comment_count * 2 + view_count * 0.1
 | ~~**2**~~ | ~~게시글 CRUD + 목록/상세/검색/권한 + 조회수~~ | ✅ 완료 — `community.test.js` 47개 |
 | ~~**3**~~ | ~~댓글/대댓글 + 반응 + 공유 + 카운터 트랜잭션~~ | ✅ 완료 — `communityInteraction.test.js` 37개 |
 | ~~**4**~~ | ~~대시보드 + 내 활동 + 알림 연동~~ | ✅ 완료 — `communityDashboard.test.js` 28개 |
-| **5** | Flutter 화면 5개 + 기존 화면 연결 | `flutter analyze` / `flutter test` 통과 |
+| ~~**5**~~ | ~~Flutter 화면 5개 + 기존 화면 연결~~ | ✅ 완료 — 테스트 60개, 계약 테스트가 버그 2건 발견 |
 | **6** | (선택) 신고·차단·이미지 첨부 | `post_reports`, `user_blocks`, `post_images` |
 
 각 단계는 그 단계만으로 동작하는 상태로 커밋합니다.

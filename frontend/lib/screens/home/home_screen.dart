@@ -4,6 +4,7 @@ import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
+import '../community/community_home_screen.dart';
 import '../festival/festival_calendar_screen.dart';
 import '../festival/festival_discover_screen.dart';
 import '../mypage/my_festival_screen.dart';
@@ -165,6 +166,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const FestivalCalendarScreen()),
+                  ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.forum_outlined),
+                  title: const Text(AppStrings.communityTitle),
+                  subtitle: const Text(AppStrings.communityHomeSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const CommunityHomeScreen()),
                   ),
                 ),
                 ListTile(
