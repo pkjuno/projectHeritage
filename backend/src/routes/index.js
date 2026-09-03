@@ -4,6 +4,7 @@ const userRoutes = require('./user.routes');
 const sidoRoutes = require('./sido.routes');
 const heritageRoutes = require('./heritage.routes');
 const festivalRoutes = require('./festival.routes');
+const communityRoutes = require('./community.routes');
 
 // 모든 도메인 라우터를 하나로 모으는 루트 라우터
 const router = express.Router();
@@ -27,5 +28,8 @@ router.use('/heritages', heritageRoutes);
 
 // /api/festivals 하위 경로는 festival.routes.js 에서 처리 (지역축제)
 router.use('/festivals', festivalRoutes);
+
+// /api/community 하위 경로는 community.routes.js 에서 처리 (게시판)
+router.use('/community', communityRoutes);
 
 module.exports = router;

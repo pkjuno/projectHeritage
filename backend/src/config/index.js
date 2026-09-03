@@ -43,6 +43,18 @@ const config = {
     scheduleReminderCron: process.env.SCHEDULE_REMINDER_CRON || '0 9 * * *',
   },
 
+  // 커뮤니티(게시판) 관련 설정
+  community: {
+    // 비로그인 방문자의 IP를 해시할 때 쓰는 키.
+    //
+    // IPv4 주소 공간은 43억 개뿐이라 소금(salt) 없이 해시하면 전수 대입으로 원본을 복원할 수 있다.
+    // 조회수를 세자고 방문자의 IP를 복원 가능한 형태로 남길 이유가 없으므로 반드시 비밀 값을 쓴다.
+    // JWT 서명 키를 재사용하지 않는 이유: 용도가 다른 키를 섞으면 한쪽이 유출됐을 때 피해가 번진다.
+    viewHashSecret: process.env.POST_VIEW_HASH_SECRET || 'change-this-view-hash-secret',
+    // 게시글 목록 인기순 정렬에서 쓰는 가중치 (반응 > 댓글 > 조회)
+    popularWeight: { reaction: 3, comment: 2, view: 0.1 },
+  },
+
   // 프로필 이미지 등 업로드 파일 관련 설정
   upload: {
     // 업로드 파일을 저장할 루트 디렉터리 (프로젝트 루트 기준 상대 경로)

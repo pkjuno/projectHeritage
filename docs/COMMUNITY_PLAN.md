@@ -327,8 +327,8 @@ score = reaction_count * 3 + comment_count * 2 + view_count * 0.1
 
 | 단계 | 범위 | 산출물 |
 | --- | --- | --- |
-| **1** | 마이그레이션 + 모델 7개 + 카테고리 시드 | 스키마 확정. `migration.test.js` 드리프트 검사 통과 |
-| **2** | 게시글 CRUD + 목록/상세/검색/권한 + 조회수 | `community.test.js` |
+| ~~**1**~~ | ~~마이그레이션 + 모델 7개 + 카테고리 시드~~ | ✅ 완료 (`99f57cd`) |
+| ~~**2**~~ | ~~게시글 CRUD + 목록/상세/검색/권한 + 조회수~~ | ✅ 완료 — `community.test.js` 47개 |
 | **3** | 댓글/대댓글 + 반응 + 공유 + 카운터 트랜잭션 | `communityInteraction.test.js` |
 | **4** | 대시보드 + 내 활동 + 알림 연동 | `communityDashboard.test.js` |
 | **5** | Flutter 화면 5개 + 기존 화면 연결 | `flutter analyze` / `flutter test` 통과 |

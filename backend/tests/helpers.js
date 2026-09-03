@@ -4,6 +4,8 @@ const { sequelize } = require('../src/config/database');
 const User = require('../src/models/user.model');
 const Sido = require('../src/models/sido.model');
 const Festival = require('../src/models/festival.model');
+const Post = require('../src/models/post.model');
+const BoardCategory = require('../src/models/boardCategory.model');
 const { seedSidos } = require('../src/seeders/sido.seed');
 const { seedBoardCategories } = require('../src/seeders/boardCategory.seed');
 
@@ -96,6 +98,28 @@ async function createFestival(overrides = {}) {
 }
 
 /**
+ * 테스트용 게시글을 만든다. 기본값은 자유게시판의 정상 글.
+ *
+ * API로 만들지 않고 모델로 직접 만드는 이유: 상태(hidden/deleted)나 카운터처럼
+ * API로는 만들 수 없는 상황을 준비해야 하는 테스트가 많기 때문이다.
+ * @param {object} options
+ * @param {number} options.userId - 작성자
+ * @param {string} [options.categoryCode] - 게시판 코드 (기본 'free')
+ * @returns {Promise<Post>}
+ */
+async function createPost({ userId, categoryCode = 'free', ...overrides } = {}) {
+  const category = await BoardCategory.findOne({ where: { code: categoryCode } });
+
+  return Post.create({
+    categoryId: category.id,
+    userId,
+    title: '테스트 게시글',
+    content: '테스트 본문입니다.',
+    ...overrides,
+  });
+}
+
+/**
  * 인증 헤더를 만든다.
  * @param {string} token
  * @returns {{Authorization: string}}
@@ -104,4 +128,12 @@ function authHeader(token) {
   return { Authorization: `Bearer ${token}` };
 }
 
-module.exports = { request, app, resetDatabase, createUserAndLogin, createFestival, authHeader };
+module.exports = {
+  request,
+  app,
+  resetDatabase,
+  createUserAndLogin,
+  createFestival,
+  createPost,
+  authHeader,
+};
