@@ -63,6 +63,9 @@ const config = {
     urlPath: '/uploads',
     // 프로필 이미지 최대 용량 (기본 5MB)
     maxImageSizeBytes: Number(process.env.UPLOAD_MAX_IMAGE_SIZE) || 5 * 1024 * 1024,
+    // 게시글 한 건에 첨부할 수 있는 이미지 수.
+    // 제한이 없으면 한 번의 요청으로 디스크를 채울 수 있다.
+    maxPostImages: Number(process.env.UPLOAD_MAX_POST_IMAGES) || 5,
   },
 };
 

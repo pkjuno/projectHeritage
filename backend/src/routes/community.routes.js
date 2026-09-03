@@ -8,6 +8,7 @@ const moderationController = require('../controllers/moderation.controller');
 const authenticate = require('../middlewares/authenticate');
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate');
 const requireAdmin = require('../middlewares/requireAdmin');
+const { uploadPostImages } = require('../middlewares/upload');
 
 // 커뮤니티(게시판) 라우터
 const router = express.Router();
@@ -30,7 +31,8 @@ router.get('/posts', optionalAuthenticate, postController.list);
 router.get('/posts/:id', optionalAuthenticate, postController.getById);
 
 // 게시글 작성 (로그인 필요, 게시판별 작성 권한은 서비스에서 확인)
-router.post('/posts', authenticate, postController.create);
+// 이미지는 multipart의 "images" 필드로 함께 받는다. 없으면 그냥 JSON 요청이 된다.
+router.post('/posts', authenticate, uploadPostImages, postController.create);
 
 // 게시글 수정 (작성자 본인만)
 router.put('/posts/:id', authenticate, postController.update);

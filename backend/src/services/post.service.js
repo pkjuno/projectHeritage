@@ -4,6 +4,8 @@ const Post = require('../models/post.model');
 const User = require('../models/user.model');
 const Festival = require('../models/festival.model');
 const BoardCategory = require('../models/boardCategory.model');
+const PostImage = require('../models/postImage.model');
+const imageStorage = require('./imageStorage.service');
 const boardCategoryService = require('./boardCategory.service');
 const postViewService = require('./postView.service');
 const userService = require('./user.service');
@@ -49,6 +51,25 @@ const POST_INCLUDE = [
 ];
 
 /**
+ * 상세 응답에만 붙이는 연관 정보.
+ *
+ * 이미지는 목록에 싣지 않는다. 목록에서 본문을 preview로 줄인 것과 같은 이유로,
+ * 한 페이지 20건에 각각 이미지 배열이 붙으면 첫 화면 응답이 불필요하게 커진다.
+ * 목록에 썸네일이 필요해지면 그때 대표 이미지 한 장만 내려주는 편이 낫다.
+ */
+const POST_DETAIL_INCLUDE = [
+  ...POST_INCLUDE,
+  {
+    model: PostImage,
+    as: 'images',
+    attributes: ['id', 'url', 'sortOrder'],
+    // 첨부 순서가 유지되지 않으면 사용자가 올린 순서와 다르게 보인다.
+    separate: true,
+    order: [['sortOrder', 'ASC']],
+  },
+];
+
+/**
  * 인기순 정렬에 쓰는 점수 식을 만든다.
  *
  * 반응 > 댓글 > 조회 순으로 가중치를 둔다. 조회는 누구나 올릴 수 있어 가장 낮다.
@@ -69,7 +90,7 @@ function popularScore() {
  */
 async function findPostOrThrow(postId, { transaction, include = false } = {}) {
   const post = await Post.findByPk(postId, {
-    include: include ? POST_INCLUDE : undefined,
+    include: include ? POST_DETAIL_INCLUDE : undefined,
     transaction,
   });
 
@@ -292,7 +313,7 @@ async function countViewIfNeeded(post, req) {
  * @param {{category?: string, title?: string, content?: string, festivalId?: number}} body
  * @returns {Promise<Post>}
  */
-async function create(userId, body = {}) {
+async function create(userId, body = {}, files = []) {
   const actor = await loadActor(userId);
   const category = await boardCategoryService.findByCodeOrThrow(body.category);
 
@@ -312,7 +333,32 @@ async function create(userId, body = {}) {
     content: fields.content,
   });
 
+  await attachImages(post.id, files);
+
   return findPostOrThrow(post.id, { include: true });
+}
+
+/**
+ * 업로드된 파일을 게시글에 첨부한다.
+ *
+ * 파일은 이미 multer가 디스크에 저장한 뒤다. 여기서는 그 위치를 행으로 남긴다.
+ * @param {number} postId
+ * @param {Express.Multer.File[]} files
+ * @returns {Promise<void>}
+ */
+async function attachImages(postId, files = []) {
+  if (files.length === 0) return;
+
+  await PostImage.bulkCreate(
+    files.map((file, index) => ({
+      postId,
+      url: imageStorage.toUrl(file.filename),
+      // 원본 파일명은 표시용으로만 남긴다. 이 값으로 파일을 찾지 않는다.
+      originalName: file.originalname,
+      sizeBytes: file.size,
+      sortOrder: index,
+    }))
+  );
 }
 
 /**
@@ -384,6 +430,15 @@ async function remove(userId, postId) {
   }
 
   await post.update({ status: 'deleted', deletedAt: new Date() });
+
+  // 글은 상태만 바꾸지만 이미지 파일은 실제로 지운다.
+  // 행을 남겨두면 지운 글의 이미지 URL을 아는 사람은 계속 볼 수 있고,
+  // 디스크에는 아무도 참조하지 않는 파일이 영원히 쌓인다.
+  const images = await PostImage.findAll({ where: { postId } });
+  if (images.length > 0) {
+    await imageStorage.removeAll(images.map((image) => image.url));
+    await PostImage.destroy({ where: { postId } });
+  }
 }
 
 /**
@@ -435,6 +490,7 @@ module.exports = {
   setPinned,
   setHidden,
   findPostOrThrow,
+  attachImages,
   TITLE_MIN,
   TITLE_MAX,
   CONTENT_MAX,

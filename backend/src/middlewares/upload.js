@@ -45,6 +45,33 @@ function fileFilter(req, file, cb) {
   cb(null, true);
 }
 
+// 게시글 첨부 이미지 저장 디렉터리
+const POST_IMAGE_DIR = path.join(process.cwd(), config.upload.dir, 'posts');
+fs.mkdirSync(POST_IMAGE_DIR, { recursive: true });
+
+const postImageStorage = multer.diskStorage({
+  destination(req, file, cb) {
+    cb(null, POST_IMAGE_DIR);
+  },
+  // 프로필과 같은 이유로 원본 파일명을 쓰지 않는다.
+  filename(req, file, cb) {
+    const extension = ALLOWED_MIME_TYPES[file.mimetype] ?? '';
+    cb(null, `${crypto.randomUUID()}${extension}`);
+  },
+});
+
+/**
+ * 게시글 첨부 이미지 업로드 미들웨어. "images" 필드로 여러 장을 받는다.
+ *
+ * 개수 제한을 두는 이유: 제한이 없으면 한 번의 요청으로 디스크를 채울 수 있다.
+ * 장당 용량은 프로필 이미지와 같은 설정을 쓴다.
+ */
+const uploadPostImages = multer({
+  storage: postImageStorage,
+  fileFilter,
+  limits: { fileSize: config.upload.maxImageSizeBytes, files: config.upload.maxPostImages },
+}).array('images', config.upload.maxPostImages);
+
 // 프로필 이미지 업로드 미들웨어. 요청의 "image" 필드 하나만 받는다.
 const uploadProfileImage = multer({
   storage,
@@ -77,4 +104,11 @@ async function removeProfileImageFile(imageUrl) {
   await fs.promises.rm(filePath, { force: true });
 }
 
-module.exports = { uploadProfileImage, toProfileImageUrl, removeProfileImageFile, PROFILE_IMAGE_DIR };
+module.exports = {
+  uploadProfileImage,
+  uploadPostImages,
+  toProfileImageUrl,
+  removeProfileImageFile,
+  PROFILE_IMAGE_DIR,
+  POST_IMAGE_DIR,
+};

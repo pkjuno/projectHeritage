@@ -62,7 +62,7 @@ async function getById(req, res, next) {
  */
 async function create(req, res, next) {
   try {
-    const post = await postService.create(req.user.id, req.body);
+    const post = await postService.create(req.user.id, req.body, req.files ?? []);
     return success(res, 201, '게시글이 등록되었습니다.', withPersonalFlags(post, req.user));
   } catch (error) {
     return next(error);
