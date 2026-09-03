@@ -39,6 +39,7 @@ dependencies:
 
   # 네이버 간편로그인 SDK (사용 전 clientId/clientSecret 초기화 필요)
   flutter_naver_login: ^1.8.0
+  google_fonts: ^8.2.1
 
 dev_dependencies:
   flutter_test:

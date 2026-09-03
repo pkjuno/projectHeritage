@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
+import 'theme/app_theme.dart';
 import 'utils/constants.dart';
 
 /// 앱의 최상위 위젯.
@@ -12,11 +13,8 @@ class App extends StatelessWidget {
     return MaterialApp(
       title: AppStrings.appTitle,
       debugShowCheckedModeBanner: false,
-      // 앱 전역 테마 설정
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      // 앱 전역 테마 설정 (색상/서체/컴포넌트 스타일은 theme/ 아래에 모여 있다)
+      theme: AppTheme.light,
       // 앱 시작 시 첫 화면
       initialRoute: AppRoutes.splash,
       // 라우트 이름 -> 화면 매핑

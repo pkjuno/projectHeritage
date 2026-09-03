@@ -3,6 +3,8 @@ import '../../models/community_dashboard_model.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../widgets/post_card.dart';
 import '../festival/festival_detail_screen.dart';
@@ -158,7 +160,17 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
       ),
       child: Row(
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          // 섹션 제목은 본문보다 작고 굵게 둔다. 명조 제목이 화면마다 반복되면
+          // 정작 글 제목이 눈에 띄지 않는다.
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.4,
+              color: AppColors.inkSecondary,
+            ),
+          ),
           const Spacer(),
           if (onMore != null)
             TextButton(onPressed: onMore, child: const Text('더보기')),
@@ -170,7 +182,7 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
   /// 내 활동 요약 카드.
   Widget _buildMyActivity(MyActivitySummaryModel activity) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: AppSizes.paddingMedium),
+      margin: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge),
       child: InkWell(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const MyActivityScreen()),
@@ -181,9 +193,14 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _ActivityStat(label: '내 글', count: activity.postCount),
-              _ActivityStat(label: '내 댓글', count: activity.commentCount),
+              _ActivityStat(label: '내 댓글', count: activity.commentCount, divided: true),
               // 내가 누른 반응이 아니라 내 글이 받은 반응이다.
-              _ActivityStat(label: '받은 반응', count: activity.receivedReactionCount),
+              // 셋 중 이 값만 강조색을 쓴다 — 커뮤니티에서 의미 있는 숫자이기 때문이다.
+              _ActivityStat(
+                label: '받은 반응',
+                count: activity.receivedReactionCount,
+                highlighted: true,
+              ),
             ],
           ),
         ),
@@ -197,6 +214,12 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionHeader(AppStrings.boardSection),
+        Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border.symmetric(horizontal: BorderSide(color: AppColors.line)),
+          ),
+          child: Column(children: [
         for (final summary in categories)
           ListTile(
             dense: true,
@@ -207,16 +230,19 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
                 if (summary.hasNewToday) ...[
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      borderRadius: BorderRadius.circular(8),
+                      // 채운 뱃지 대신 옅은 배경을 쓴다. 게시판마다 채운 뱃지가 붙으면
+                      // 목록 전체가 시끄러워지고 강조의 의미가 사라진다.
+                      color: AppColors.accentSurface,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                     child: Text(
                       '+${summary.todayCount}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 10,
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -233,6 +259,8 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
             ),
             onTap: () => _goToList(category: _findCategory(summary.code)),
           ),
+          ]),
+        ),
       ],
     );
   }
@@ -244,17 +272,17 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
       children: [
         _sectionHeader(AppStrings.festivalTalkSection),
         SizedBox(
-          height: 96,
+          height: 92,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingMedium),
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingLarge),
             itemCount: talks.length,
             separatorBuilder: (_, __) => const SizedBox(width: AppSizes.paddingSmall),
             itemBuilder: (context, index) {
               final talk = talks[index];
 
               return SizedBox(
-                width: 200,
+                width: 150,
                 child: Card(
                   child: InkWell(
                     // 축제 상세로 보낸다. 거기서 그 축제의 후기 목록으로 다시 들어갈 수 있다.
@@ -276,9 +304,23 @@ class _CommunityHomeScreenState extends State<CommunityHomeScreen> {
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '글 ${talk.postCount}개',
-                            style: Theme.of(context).textTheme.bodySmall,
+                          Row(
+                            children: [
+                              // 지금 열리는 중이라는 신호를 점 하나로만 준다.
+                              Container(
+                                width: 4,
+                                height: 4,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.accent,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                '진행 중 · 글 ${talk.postCount}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -310,15 +352,43 @@ class _ActivityStat extends StatelessWidget {
   final String label;
   final int count;
 
-  const _ActivityStat({required this.label, required this.count});
+  /// 강조색으로 표시할지 여부.
+  final bool highlighted;
+
+  /// 좌우에 세로 구분선을 둘지 여부. (가운데 칸)
+  final bool divided;
+
+  const _ActivityStat({
+    required this.label,
+    required this.count,
+    this.highlighted = false,
+    this.divided = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text('$count', style: Theme.of(context).textTheme.titleLarge),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ],
+    return Container(
+      decoration: divided
+          ? const BoxDecoration(
+              border: Border.symmetric(
+                vertical: BorderSide(color: AppColors.lineSubtle),
+              ),
+            )
+          : null,
+      child: Column(
+        children: [
+          Text(
+            '$count',
+            style: AppTheme.serif(
+              fontSize: 21,
+              fontWeight: FontWeight.w400,
+              color: highlighted ? AppColors.accent : AppColors.ink,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
     );
   }
 }

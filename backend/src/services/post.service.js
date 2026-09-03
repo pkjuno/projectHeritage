@@ -11,6 +11,11 @@ const AppError = require('../utils/AppError');
 const config = require('../config');
 const { parsePagination, toPagedResult } = require('../utils/pagination');
 
+// 목록에 함께 내려줄 본문 미리보기 길이.
+// 목록에서 제목만 보이면 어떤 글인지 판단하려고 매번 들어가 봐야 한다.
+// 그렇다고 본문 전체를 실으면 20개짜리 한 페이지가 수백 KB가 된다.
+const PREVIEW_LENGTH = 150;
+
 // 제목/본문 길이 제한.
 // content는 TEXT(최대 65535바이트)인데 한글은 UTF-8에서 글자당 3바이트라
 // 넉넉히 잡아도 2만 자를 넘기면 잘린다. 그래서 컬럼 한계보다 훨씬 앞에서 막는다.
@@ -187,6 +192,13 @@ async function list(query = {}) {
 
   const result = await Post.findAndCountAll({
     where,
+    attributes: {
+      // 본문은 통째로 내리지 않고 앞부분만 잘라 preview로 준다.
+      // 자르는 일은 DB에 시킨다. 애플리케이션에서 자르면 이미 전체 본문을
+      // 네트워크로 실어 온 뒤라 아끼려던 것을 못 아낀다.
+      include: [[literal(`LEFT(\`Post\`.\`content\`, ${PREVIEW_LENGTH})`), 'preview']],
+      exclude: ['content'],
+    },
     include: POST_INCLUDE,
     limit: pagination.limit,
     offset: pagination.offset,
@@ -420,4 +432,5 @@ module.exports = {
   TITLE_MIN,
   TITLE_MAX,
   CONTENT_MAX,
+  PREVIEW_LENGTH,
 };

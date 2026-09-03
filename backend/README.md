@@ -350,6 +350,11 @@ GET /api/festivals/calendar?year=2026&month=11&sidoCode=11
 | PATCH | `/api/community/posts/:id/pin` | 상단 고정 (body: `isPinned`) | O (운영자) |
 | PATCH | `/api/community/posts/:id/hide` | 블라인드 처리 (body: `hidden`) | O (운영자) |
 
+목록 응답에는 본문(`content`) 대신 앞 150자만 잘린 `preview`가 담깁니다.
+제목만 보이면 어떤 글인지 판단하려고 매번 들어가 봐야 하고, 그렇다고 본문 전체를 실으면
+20개짜리 한 페이지가 수백 KB가 됩니다. 자르는 일은 `LEFT()`로 DB에 시킵니다 —
+애플리케이션에서 자르면 이미 전체 본문을 네트워크로 실어 온 뒤라 아끼려던 것을 못 아낍니다.
+
 `sort`는 `latest`(기본)와 `popular`를 지원합니다. 고정 글은 정렬 방식과 무관하게 항상 맨 위입니다.
 목록/상세는 비회원도 볼 수 있고, 로그인한 경우 각 글에 `isMine` 플래그가 붙습니다.
 

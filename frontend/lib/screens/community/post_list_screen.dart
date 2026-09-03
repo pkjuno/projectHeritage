@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../widgets/post_card.dart';
 import 'post_detail_screen.dart';
@@ -157,8 +158,15 @@ class _PostListScreenState extends State<PostListScreen> {
       body: Column(
         children: [
           _buildFilterBar(),
-          const Divider(height: 1),
-          Expanded(child: _buildList()),
+          Expanded(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: AppColors.surface,
+                border: Border(top: BorderSide(color: AppColors.line)),
+              ),
+              child: _buildList(),
+            ),
+          ),
         ],
       ),
     );
@@ -175,16 +183,16 @@ class _PostListScreenState extends State<PostListScreen> {
               controller: _searchController,
               textInputAction: TextInputAction.search,
               onSubmitted: _applyKeyword,
+              style: Theme.of(context).textTheme.bodyMedium,
               decoration: InputDecoration(
                 hintText: AppStrings.searchHint,
-                isDense: true,
-                prefixIcon: const Icon(Icons.search, size: 20),
-                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.inkMuted),
+                prefixIconConstraints: const BoxConstraints(minWidth: 38),
                 // 검색어가 있을 때만 지우기 버튼을 보여준다.
                 suffixIcon: _keyword == null
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
+                        icon: const Icon(Icons.clear, size: 18),
                         onPressed: () {
                           _searchController.clear();
                           _applyKeyword('');
@@ -194,15 +202,7 @@ class _PostListScreenState extends State<PostListScreen> {
             ),
           ),
           const SizedBox(width: AppSizes.paddingSmall),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'latest', label: Text(AppStrings.sortLatest)),
-              ButtonSegment(value: 'popular', label: Text(AppStrings.sortPopular)),
-            ],
-            selected: {_sort},
-            showSelectedIcon: false,
-            onSelectionChanged: (selection) => _changeSort(selection.first),
-          ),
+          _SortToggle(sort: _sort, onChanged: _changeSort),
         ],
       ),
     );
@@ -229,7 +229,7 @@ class _PostListScreenState extends State<PostListScreen> {
         controller: _scrollController,
         // 마지막 칸은 다음 페이지 로딩 표시에 쓴다.
         itemCount: _posts.length + (_hasMore ? 1 : 0),
-        separatorBuilder: (_, __) => const Divider(height: 1),
+        separatorBuilder: (_, __) => const Divider(color: AppColors.lineSubtle),
         itemBuilder: (context, index) {
           if (index >= _posts.length) {
             return const Padding(
@@ -241,6 +241,57 @@ class _PostListScreenState extends State<PostListScreen> {
           final post = _posts[index];
           return PostCard(post: post, onTap: () => _goToDetail(post));
         },
+      ),
+    );
+  }
+}
+
+/// 최신순 / 인기순 토글.
+///
+/// Material의 SegmentedButton은 이 톤에 비해 형태가 무겁고 높이가 커서,
+/// 검색창과 같은 높이로 맞춘 얇은 토글을 직접 만든다.
+class _SortToggle extends StatelessWidget {
+  final String sort;
+  final ValueChanged<String> onChanged;
+
+  const _SortToggle({required this.sort, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 46,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border.all(color: AppColors.line),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Row(
+        children: [
+          _segment(context, 'latest', AppStrings.sortLatest),
+          const VerticalDivider(width: 1, color: AppColors.line),
+          _segment(context, 'popular', AppStrings.sortPopular),
+        ],
+      ),
+    );
+  }
+
+  Widget _segment(BuildContext context, String value, String label) {
+    final selected = sort == value;
+
+    return InkWell(
+      onTap: () => onChanged(value),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        color: selected ? AppColors.accent : Colors.transparent,
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+            color: selected ? AppColors.onAccent : AppColors.inkSecondary,
+          ),
+        ),
       ),
     );
   }

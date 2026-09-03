@@ -242,6 +242,40 @@ describe('커뮤니티 - 게시글', () => {
       expect(response.body.data.total).toBe(2);
     });
 
+    it('목록에는 본문 대신 앞부분만 잘린 미리보기가 온다', async () => {
+      const { user } = await createUserAndLogin();
+      const longBody = '가'.repeat(500);
+      await createPost({ userId: user.id, content: longBody });
+
+      const response = await request(app).get('/api/community/posts').expect(200);
+      const item = response.body.data.items[0];
+
+      // 본문 전체를 실으면 20개짜리 한 페이지가 수백 KB가 된다.
+      expect(item.content).toBeUndefined();
+      expect(item.preview).toHaveLength(150);
+      expect(longBody.startsWith(item.preview)).toBe(true);
+    });
+
+    it('짧은 본문은 그대로 미리보기가 된다', async () => {
+      const { user } = await createUserAndLogin();
+      await createPost({ userId: user.id, content: '짧은 본문' });
+
+      const response = await request(app).get('/api/community/posts').expect(200);
+      expect(response.body.data.items[0].preview).toBe('짧은 본문');
+    });
+
+    it('상세에는 잘리지 않은 본문이 온다', async () => {
+      const { user } = await createUserAndLogin();
+      const longBody = '나'.repeat(500);
+      const post = await createPost({ userId: user.id, content: longBody });
+
+      const response = await request(app)
+        .get(`/api/community/posts/${post.id}`)
+        .expect(200);
+
+      expect(response.body.data.content).toBe(longBody);
+    });
+
     it('숨김/삭제된 글은 목록에 나오지 않는다', async () => {
       const { user } = await createUserAndLogin();
       await createPost({ userId: user.id, title: '정상 글' });

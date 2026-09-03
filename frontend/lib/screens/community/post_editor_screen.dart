@@ -4,6 +4,7 @@ import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
 import '../../services/festival_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 
 /// 게시글 작성/수정 화면.
@@ -183,9 +184,19 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
       appBar: AppBar(
         title: Text(_isEditing ? AppStrings.editPost : AppStrings.writePost),
         actions: [
-          TextButton(
-            onPressed: _isSubmitting ? null : _submit,
-            child: Text(_isSubmitting ? '저장 중...' : AppStrings.saveButton),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 8, AppSizes.paddingMedium, 8),
+            child: FilledButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                disabledBackgroundColor: AppColors.line,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                minimumSize: const Size(0, 34),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(17)),
+              ),
+              child: Text(_isSubmitting ? '저장 중...' : '등록'),
+            ),
           ),
         ],
       ),
@@ -201,28 +212,26 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
                     _buildCategoryField(),
                     const SizedBox(height: AppSizes.paddingMedium),
                     _buildFestivalField(),
+                    const _FieldLabel(AppStrings.postTitleLabel),
                     TextFormField(
                       controller: _titleController,
                       maxLength: 200,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.postTitleLabel,
-                        border: OutlineInputBorder(),
-                      ),
+                      // 제목은 목록에서도 명조로 보이므로 입력할 때부터 같은 서체를 쓴다.
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontSize: 15),
+                      decoration: const InputDecoration(),
                       // 서버와 같은 기준(2자 이상)으로 미리 막는다.
                       validator: (value) => (value ?? '').trim().length < 2
                           ? '제목은 2자 이상 입력해 주세요.'
                           : null,
                     ),
-                    const SizedBox(height: AppSizes.paddingMedium),
+                    const SizedBox(height: AppSizes.paddingLarge),
+                    const _FieldLabel(AppStrings.postContentLabel),
                     TextFormField(
                       controller: _contentController,
                       maxLines: 12,
                       maxLength: 10000,
-                      decoration: const InputDecoration(
-                        labelText: AppStrings.postContentLabel,
-                        alignLabelWithHint: true,
-                        border: OutlineInputBorder(),
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      decoration: const InputDecoration(alignLabelWithHint: true),
                       validator: (value) =>
                           (value ?? '').trim().isEmpty ? '내용을 입력해 주세요.' : null,
                     ),
@@ -236,21 +245,25 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
   /// 게시판 선택 칸. 수정 모드에서는 읽기 전용으로 보여준다.
   Widget _buildCategoryField() {
     if (_isEditing) {
-      return InputDecorator(
-        decoration: const InputDecoration(
-          labelText: AppStrings.boardSection,
-          border: OutlineInputBorder(),
-        ),
-        child: Text(widget.post?.category?.name ?? '-'),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _FieldLabel(AppStrings.boardSection),
+          InputDecorator(
+            decoration: const InputDecoration(),
+            child: Text(widget.post?.category?.name ?? '-'),
+          ),
+        ],
       );
     }
 
-    return DropdownButtonFormField<BoardCategoryModel>(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _FieldLabel(AppStrings.boardSection),
+        DropdownButtonFormField<BoardCategoryModel>(
       initialValue: _selectedCategory,
-      decoration: const InputDecoration(
-        labelText: AppStrings.boardSection,
-        border: OutlineInputBorder(),
-      ),
+      decoration: const InputDecoration(),
       items: _categories
           .map((category) => DropdownMenuItem(value: category, child: Text(category.name)))
           .toList(),
@@ -264,6 +277,10 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
         });
         _loadFestivalsIfNeeded();
       },
+        ),
+        // 왜 공지사항이 목록에 없는지 알려준다. 없으면 버그로 오해한다.
+        const _FieldHint('공지사항은 운영자만 작성할 수 있어 목록에 없습니다.'),
+      ],
     );
   }
 
@@ -277,13 +294,22 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
     // 축제 상세에서 들어왔으면 대상이 이미 정해져 있으므로 고르게 하지 않는다.
     if (widget.fixedFestivalId != null) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-        child: InputDecorator(
-          decoration: const InputDecoration(
-            labelText: AppStrings.selectFestival,
-            border: OutlineInputBorder(),
-          ),
-          child: Text(widget.fixedFestivalName ?? '선택된 축제'),
+        padding: const EdgeInsets.only(bottom: AppSizes.paddingLarge),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _FieldLabel(AppStrings.selectFestival, required: true),
+            InputDecorator(
+              decoration: const InputDecoration(),
+              child: Row(
+                children: [
+                  const Icon(Icons.festival_outlined, size: 15, color: AppColors.accent),
+                  const SizedBox(width: 8),
+                  Text(widget.fixedFestivalName ?? '선택된 축제'),
+                ],
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -291,26 +317,30 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
     // 수정 모드에서는 축제를 바꾸지 않는다. (연결 해제가 서버에서 막히는 게시판이 있다)
     if (_isEditing) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-        child: InputDecorator(
-          decoration: const InputDecoration(
-            labelText: AppStrings.selectFestival,
-            border: OutlineInputBorder(),
-          ),
-          child: Text(widget.post?.festival?.name ?? '-'),
+        padding: const EdgeInsets.only(bottom: AppSizes.paddingLarge),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _FieldLabel(AppStrings.selectFestival),
+            InputDecorator(
+              decoration: const InputDecoration(),
+              child: Text(widget.post?.festival?.name ?? '-'),
+            ),
+          ],
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-      child: DropdownButtonFormField<int>(
+      padding: const EdgeInsets.only(bottom: AppSizes.paddingLarge),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _FieldLabel(AppStrings.selectFestival, required: true),
+          DropdownButtonFormField<int>(
         initialValue: _selectedFestivalId,
         isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: AppStrings.selectFestival,
-          border: OutlineInputBorder(),
-        ),
+        decoration: const InputDecoration(),
         items: _festivals
             .map((festival) => DropdownMenuItem(
                   value: festival.id,
@@ -318,7 +348,69 @@ class _PostEditorScreenState extends State<PostEditorScreen> {
                 ))
             .toList(),
         onChanged: (id) => setState(() => _selectedFestivalId = id),
+          ),
+          const _FieldHint('이 게시판은 어떤 축제의 후기인지 선택해야 합니다.'),
+        ],
       ),
+    );
+  }
+}
+
+/// 입력 칸 위에 붙는 작은 라벨.
+///
+/// Material의 floating label 대신 칸 밖에 두는 이유:
+/// 값이 채워지면 label이 위로 올라가 크기가 바뀌는데, 폼이 길어질수록
+/// 그 움직임이 산만하고 라벨끼리 세로 정렬도 흐트러진다.
+class _FieldLabel extends StatelessWidget {
+  final String text;
+
+  /// 필수 입력 표시를 붙일지 여부.
+  final bool required;
+
+  const _FieldLabel(this.text, {this.required = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.paddingSmall),
+      child: Row(
+        children: [
+          Text(text, style: Theme.of(context).textTheme.labelSmall),
+          if (required) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppColors.accentSurface,
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Text(
+                '필수',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.accent,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// 입력 칸 아래에 붙는 안내 문구.
+class _FieldHint extends StatelessWidget {
+  final String text;
+
+  const _FieldHint(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Text(text, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

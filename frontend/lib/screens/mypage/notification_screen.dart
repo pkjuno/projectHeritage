@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/notification_model.dart';
 import '../../services/api_service.dart';
 import '../../services/notification_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../community/post_detail_screen.dart';
 import '../festival/festival_detail_screen.dart';
@@ -122,7 +123,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                         Center(
                           child: Text(
                             AppStrings.emptyNotification,
-                            style: TextStyle(color: Colors.grey),
+                            style: TextStyle(color: AppColors.inkMuted),
                           ),
                         ),
                       ],
@@ -139,7 +140,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                             notification.isUnread
                                 ? Icons.notifications_active
                                 : Icons.notifications_none,
-                            color: notification.isUnread ? Colors.deepOrange : Colors.grey,
+                            color: notification.isUnread ? AppColors.accent : AppColors.inkDisabled,
                           ),
                           title: Text(
                             notification.title,

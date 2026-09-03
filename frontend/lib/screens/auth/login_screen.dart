@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 import '../home/home_screen.dart';
@@ -119,13 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               // SNS 간편로그인 버튼 목록
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFEE500)),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.kakao),
                 onPressed: _isLoading ? null : () => _handleSocialLogin(AuthProvider.kakao),
                 child: const Text(AppStrings.kakaoLoginButton, style: TextStyle(color: Colors.black)),
               ),
               const SizedBox(height: AppSizes.paddingSmall),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF03C75A)),
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.naver),
                 onPressed: _isLoading ? null : () => _handleSocialLogin(AuthProvider.naver),
                 child: const Text(AppStrings.naverLoginButton, style: TextStyle(color: Colors.white)),
               ),

@@ -3,6 +3,7 @@ import '../../models/my_activity_model.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_format.dart';
 import '../../utils/reaction_types.dart';
@@ -56,6 +57,7 @@ class _MyActivityScreenState extends State<MyActivityScreen>
           ],
         ),
       ),
+      backgroundColor: AppColors.surface,
       body: TabBarView(
         controller: _tabController,
         children: [
@@ -192,9 +194,26 @@ class _ActivityTabState<T> extends State<_ActivityTab<T>>
           return RefreshIndicator(
             onRefresh: _refresh,
             child: ListView(
-              children: const [
-                SizedBox(height: 120),
-                Center(child: Text(AppStrings.emptyMyActivity)),
+              children: [
+                const SizedBox(height: 100),
+                // 빈 화면에 문구만 있으면 고장난 것처럼 보인다. 다음에 할 일을 알려준다.
+                Center(
+                  child: Column(
+                    children: [
+                      const Icon(Icons.forum_outlined, size: 26, color: AppColors.inkDisabled),
+                      const SizedBox(height: AppSizes.paddingSmall),
+                      Text(
+                        AppStrings.emptyMyActivity,
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '다녀온 축제의 후기를 남겨보세요.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -204,7 +223,7 @@ class _ActivityTabState<T> extends State<_ActivityTab<T>>
           onRefresh: _refresh,
           child: ListView.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
+            separatorBuilder: (_, __) => const Divider(color: AppColors.lineSubtle),
             itemBuilder: (context, index) => widget.itemBuilder(items[index]),
           ),
         );

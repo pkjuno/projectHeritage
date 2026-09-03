@@ -7,6 +7,7 @@ import '../../models/user_model.dart';
 import '../../services/api_service.dart';
 import '../../services/social_account_service.dart';
 import '../../services/user_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 
@@ -262,7 +263,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
             padding: EdgeInsets.only(top: AppSizes.paddingSmall),
             child: Text(
               '연결된 간편로그인이 하나뿐이라 해지할 수 없습니다.\n다른 간편로그인을 먼저 연결해 주세요.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
             ),
           ),
       ],
@@ -278,7 +279,7 @@ class _MyPageScreenState extends State<MyPageScreen> {
       contentPadding: EdgeInsets.zero,
       leading: Icon(
         isLinked ? Icons.link : Icons.link_off,
-        color: isLinked ? Colors.green : Colors.grey,
+        color: isLinked ? AppColors.accent : AppColors.inkDisabled,
       ),
       title: Text(authProviderLabel(provider)),
       subtitle: Text(isLinked ? '연결됨' : '연결 안 됨'),

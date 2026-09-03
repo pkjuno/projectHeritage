@@ -4,6 +4,7 @@ import '../../models/schedule_model.dart';
 import '../../services/api_service.dart';
 import '../../services/schedule_service.dart';
 import '../../services/wishlist_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_format.dart';
 import '../festival/festival_detail_screen.dart';
@@ -150,7 +151,7 @@ class _MyFestivalScreenState extends State<MyFestivalScreen> {
                 ? null
                 : Text('${festival.regionLabel} · ${festival.periodLabel}'),
             trailing: IconButton(
-              icon: const Icon(Icons.favorite, color: Colors.red),
+              icon: const Icon(Icons.favorite, color: AppColors.accent),
               tooltip: AppStrings.removeWishlist,
               onPressed: () => _removeWishlist(festivalId),
             ),
@@ -210,7 +211,7 @@ class _MyFestivalScreenState extends State<MyFestivalScreen> {
       child: ListView(
         children: [
           const SizedBox(height: 120),
-          Center(child: Text(message, style: const TextStyle(color: Colors.grey))),
+          Center(child: Text(message, style: const TextStyle(color: AppColors.inkMuted))),
         ],
       ),
     );

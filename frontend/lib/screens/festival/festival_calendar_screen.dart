@@ -6,6 +6,7 @@ import '../../models/festival_model.dart';
 import '../../models/sido_model.dart';
 import '../../services/api_service.dart';
 import '../../services/festival_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import 'festival_detail_screen.dart';
 
@@ -176,7 +177,7 @@ class _FestivalCalendarScreenState extends State<FestivalCalendarScreen> {
       availableCalendarFormats: const {CalendarFormat.month: '월'},
       headerStyle: const HeaderStyle(formatButtonVisible: false, titleCentered: true),
       calendarStyle: const CalendarStyle(
-        markerDecoration: BoxDecoration(color: Colors.deepOrange, shape: BoxShape.circle),
+        markerDecoration: BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
         // 한 날짜에 표시할 마커 최대 개수 (넘치면 마커가 겹쳐 보이는 것을 방지)
         markersMaxCount: 3,
       ),

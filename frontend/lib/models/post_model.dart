@@ -84,8 +84,14 @@ class PostModel {
   final int id;
   final String title;
 
-  /// 본문. 목록 응답에는 없다.
+  /// 본문. 목록 응답에는 없고 상세 응답에만 있다.
   final String? content;
+
+  /// 본문 앞부분만 잘라낸 미리보기. 목록 응답에만 있다.
+  ///
+  /// 목록에서 제목만 보이면 어떤 글인지 판단하려고 매번 들어가 봐야 한다.
+  /// 그렇다고 본문 전체를 실으면 한 페이지가 수백 KB가 되므로 서버가 잘라서 준다.
+  final String? preview;
 
   final AuthorModel? author;
   final BoardCategoryModel? category;
@@ -120,6 +126,7 @@ class PostModel {
     required this.title,
     required this.createdAt,
     this.content,
+    this.preview,
     this.author,
     this.category,
     this.festival,
@@ -144,11 +151,16 @@ class PostModel {
   /// 작성자 표시 이름. 탈퇴 등으로 작성자 정보가 없으면 대체 문구를 쓴다.
   String get authorLabel => author?.displayName ?? '알 수 없음';
 
+  /// 목록에 보여줄 본문 요약.
+  /// 목록 응답이면 preview가, 상세 응답이면 content가 들어 있다.
+  String? get summaryText => preview ?? content;
+
   factory PostModel.fromJson(Map<String, dynamic> json) {
     return PostModel(
       id: json['id'] as int,
       title: json['title'] as String,
       content: json['content'] as String?,
+      preview: json['preview'] as String?,
       author: json['author'] != null
           ? AuthorModel.fromJson(json['author'] as Map<String, dynamic>)
           : null,

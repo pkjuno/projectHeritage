@@ -5,6 +5,7 @@ import '../../models/comment_model.dart';
 import '../../models/post_model.dart';
 import '../../services/api_service.dart';
 import '../../services/community_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../utils/date_format.dart';
 import '../../utils/reaction_types.dart';
@@ -247,6 +248,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// 댓글 입력창 전용 둥근 테두리.
+  static OutlineInputBorder _roundedBorder(Color color) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(22),
+      borderSide: BorderSide(color: color),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = _post;
@@ -287,17 +296,38 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
         children: [
           if (post.isHidden) _buildHiddenNotice(),
           Text(post.title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSizes.paddingSmall),
+          const SizedBox(height: AppSizes.paddingMedium),
           _buildMeta(post),
-          if (post.festival != null) _buildFestivalLink(post),
-          const Divider(height: AppSizes.paddingLarge),
-          Text(post.content ?? '', style: Theme.of(context).textTheme.bodyMedium),
+          if (post.festival != null) ...[
+            const SizedBox(height: AppSizes.paddingMedium),
+            _buildFestivalLink(post),
+          ],
+          const SizedBox(height: AppSizes.paddingLarge),
+          Text(post.content ?? '', style: Theme.of(context).textTheme.bodyLarge),
           const SizedBox(height: AppSizes.paddingLarge),
           _buildReactionBar(post),
-          const Divider(height: AppSizes.paddingLarge),
-          Text(
-            '${AppStrings.commentSection} ${post.commentCount}',
-            style: Theme.of(context).textTheme.titleSmall,
+          const SizedBox(height: AppSizes.paddingLarge),
+          const Divider(color: AppColors.line),
+          const SizedBox(height: AppSizes.paddingMedium),
+          Row(
+            children: [
+              Text(
+                AppStrings.commentSection,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '${post.commentCount}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.accent,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSizes.paddingSmall),
           if (_comments.isEmpty)
@@ -334,32 +364,76 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
   /// 작성자 / 날짜 / 조회수 줄.
   Widget _buildMeta(PostModel post) {
-    final style = Theme.of(context).textTheme.bodySmall;
+    final theme = Theme.of(context);
+    final label = post.authorLabel;
 
     return Row(
       children: [
-        Text(post.authorLabel, style: style),
-        const SizedBox(width: AppSizes.paddingSmall),
-        Text(toDisplayDate(post.createdAt), style: style),
-        const Spacer(),
-        Icon(Icons.visibility_outlined, size: 14, color: style?.color),
-        const SizedBox(width: 2),
-        Text('${post.viewCount}', style: style),
+        // 프로필 이미지가 없는 회원이 대부분이라, 빈 원 대신 이름 첫 글자를 쓴다.
+        CircleAvatar(
+          radius: 16,
+          backgroundColor: AppColors.accentSurface,
+          child: Text(
+            label.isNotEmpty ? label.characters.first : '?',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.accent,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.ink,
+                ),
+              ),
+              Text(
+                '${toDisplayDate(post.createdAt)} · 조회 ${post.viewCount}',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   /// 연결된 축제로 이동하는 링크.
   Widget _buildFestivalLink(PostModel post) {
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSizes.paddingSmall),
-      child: ActionChip(
-        avatar: const Icon(Icons.festival, size: 16),
-        label: Text(post.festival!.name),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => FestivalDetailScreen(festivalId: post.festival!.id),
-          ),
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FestivalDetailScreen(festivalId: post.festival!.id),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceTag,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.festival_outlined, size: 15, color: AppColors.inkSecondary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                post.festival!.name,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppColors.ink,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right, size: 15, color: AppColors.inkMuted),
+          ],
         ),
       ),
     );
@@ -374,15 +448,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final summary = post.reactions;
 
     return Wrap(
-      spacing: AppSizes.paddingSmall,
+      spacing: 6,
+      runSpacing: 6,
       children: [
         for (final type in reactionTypes)
-          FilterChip(
+          _ReactionChip(
+            emoji: emojiOf(type),
+            label: labelOf(type),
+            count: summary?.countOf(type) ?? 0,
             selected: mine == type,
-            onSelected: (_) => _setReaction(type),
-            avatar: Text(emojiOf(type)),
-            label: Text('${labelOf(type)} ${summary?.countOf(type) ?? 0}'),
-            showCheckmark: false,
+            onTap: () => _setReaction(type),
           ),
       ],
     );
@@ -391,6 +466,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
   /// 댓글 한 묶음(부모 댓글 + 답글들)을 위젯 목록으로 만든다.
   List<Widget> _buildCommentGroup(CommentModel comment) {
     return [
+      const Divider(color: AppColors.lineSubtle),
       _CommentTile(
         comment: comment,
         onReply: () => setState(() => _replyTarget = comment),
@@ -417,8 +493,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     final target = _replyTarget;
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.paddingSmall),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          border: Border(top: BorderSide(color: AppColors.line)),
+        ),
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.paddingLarge, AppSizes.paddingSmall,
+          AppSizes.paddingMedium, AppSizes.paddingSmall,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -435,7 +518,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: const Icon(Icons.close, size: 16),
+                    color: AppColors.inkMuted,
                     onPressed: () => setState(() => _replyTarget = null),
                   ),
                 ],
@@ -446,11 +530,15 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                   child: TextField(
                     controller: _commentController,
                     maxLength: 1000,
+                    style: Theme.of(context).textTheme.bodyMedium,
                     decoration: InputDecoration(
                       hintText: target == null ? AppStrings.commentHint : AppStrings.replyHint,
-                      isDense: true,
                       counterText: '',
-                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      // 입력창만 둥글게 둔다. 손으로 쓰는 자리라는 신호다.
+                      border: _roundedBorder(AppColors.line),
+                      enabledBorder: _roundedBorder(AppColors.line),
+                      focusedBorder: _roundedBorder(AppColors.accent),
                     ),
                   ),
                 ),
@@ -461,10 +549,65 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.send),
+                      : const Icon(Icons.send, size: 20),
+                  color: AppColors.accent,
                   onPressed: _isSubmittingComment ? null : _submitComment,
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 반응 하나를 나타내는 칩.
+///
+/// 다섯 종류를 항상 모두 보여주고 내가 고른 것만 강조한다.
+/// 선택된 것만 보여주면 "다른 반응도 남길 수 있다"는 사실이 드러나지 않는다.
+class _ReactionChip extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ReactionChip({
+    required this.emoji,
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
+      child: Container(
+        height: 36,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.accentSurface : Colors.transparent,
+          border: Border.all(color: selected ? AppColors.accent : AppColors.line),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 6),
+            Text(
+              '$count',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+                // 0인 반응까지 진하게 두면 목록이 균일해져 실제 반응이 묻힌다.
+                color: selected
+                    ? AppColors.accent
+                    : (count > 0 ? AppColors.inkSecondary : AppColors.inkMuted),
+              ),
             ),
           ],
         ),
@@ -491,61 +634,149 @@ class _CommentTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDeleted = comment.isDeleted;
+    final label = comment.authorLabel;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSizes.paddingSmall),
-      child: Column(
+    return Container(
+      // 대댓글은 부모와 같은 묶음임을 바탕색으로 알린다. 들여쓰기는 화면에서 처리한다.
+      color: comment.isReply ? AppColors.surfaceMuted : Colors.transparent,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                // 삭제된 댓글은 서버가 작성자를 가려서 내려준다.
-                isDeleted ? '' : comment.authorLabel,
-                style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(width: AppSizes.paddingSmall),
-              Text(toDisplayDate(comment.createdAt), style: theme.textTheme.bodySmall),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Text(
-            comment.content,
-            style: isDeleted
-                // 삭제된 댓글은 자리만 남은 것이므로 흐리게 보여준다.
-                ? theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.disabledColor,
-                    fontStyle: FontStyle.italic,
-                  )
-                : theme.textTheme.bodyMedium,
-          ),
-          // 삭제된 댓글에는 어떤 동작 버튼도 두지 않는다.
-          if (!isDeleted)
-            Row(
-              children: [
-                TextButton.icon(
-                  onPressed: onToggleLike,
-                  icon: Icon(
-                    comment.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
-                    size: 14,
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: isDeleted
+                ? AppColors.lineSubtle
+                : (comment.isMine ? AppColors.accentSurface : AppColors.surfaceTag),
+            child: isDeleted
+                ? null
+                : Text(
+                    label.isNotEmpty ? label.characters.first : '?',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 11,
+                      color: comment.isMine ? AppColors.accent : AppColors.inkSecondary,
+                    ),
                   ),
-                  label: Text('${comment.likeCount}'),
-                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                ),
-                TextButton(
-                  onPressed: onReply,
-                  style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                  child: const Text('답글'),
-                ),
-                if (comment.isMine)
-                  TextButton(
-                    onPressed: onDelete,
-                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                    child: const Text('삭제'),
-                  ),
-              ],
-            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: isDeleted ? _buildDeleted(theme) : _buildContent(context, theme, label),
+          ),
         ],
+      ),
+    );
+  }
+
+  /// 삭제된 댓글: 자리만 남기고 내용과 작성자를 모두 가린다.
+  /// 어떤 동작 버튼도 두지 않는다.
+  Widget _buildDeleted(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Text(
+        comment.content,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: AppColors.inkDisabled,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, ThemeData theme, String label) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink,
+              ),
+            ),
+            if (comment.isMine) ...[
+              const SizedBox(width: 5),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.accentBorder),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: Text(
+                  '내 댓글',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(width: 6),
+            Text(toDisplayDate(comment.createdAt), style: theme.textTheme.bodySmall),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(comment.content, style: theme.textTheme.bodyMedium),
+        const SizedBox(height: 2),
+        Row(
+          children: [
+            _CommentAction(
+              icon: comment.isLiked ? Icons.thumb_up : Icons.thumb_up_outlined,
+              label: '${comment.likeCount}',
+              highlighted: comment.isLiked,
+              onTap: onToggleLike,
+            ),
+            const SizedBox(width: 16),
+            _CommentAction(label: '답글', onTap: onReply),
+            if (comment.isMine) ...[
+              const SizedBox(width: 16),
+              _CommentAction(label: '삭제', onTap: onDelete),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// 댓글 아래 줄의 작은 동작 버튼.
+class _CommentAction extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final bool highlighted;
+  final VoidCallback onTap;
+
+  const _CommentAction({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.highlighted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = highlighted ? AppColors.accent : AppColors.inkMuted;
+
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        // 글자만 놓으면 터치 영역이 너무 작아진다. 위아래로 여백을 준다.
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 13, color: color),
+              const SizedBox(width: 4),
+            ],
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import '../../models/nearby_model.dart';
 import '../../services/api_service.dart';
 import '../../services/festival_service.dart';
 import '../../services/location_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import 'festival_detail_screen.dart';
 
@@ -110,7 +111,7 @@ class _FestivalDiscoverScreenState extends State<FestivalDiscoverScreen> {
                       child: Center(
                         child: Text(
                           AppStrings.emptyDiscover,
-                          style: TextStyle(color: Colors.grey),
+                          style: TextStyle(color: AppColors.inkMuted),
                         ),
                       ),
                     )
@@ -164,7 +165,7 @@ class _FestivalDiscoverScreenState extends State<FestivalDiscoverScreen> {
         width: 200,
         padding: const EdgeInsets.all(AppSizes.paddingMedium),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: AppColors.line),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -183,7 +184,7 @@ class _FestivalDiscoverScreenState extends State<FestivalDiscoverScreen> {
               festival.regionLabel,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
             ),
           ],
         ),

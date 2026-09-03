@@ -7,6 +7,7 @@ import '../../services/community_service.dart';
 import '../../services/festival_service.dart';
 import '../../services/schedule_service.dart';
 import '../../services/wishlist_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../models/post_model.dart';
 import '../community/post_list_screen.dart';
@@ -209,7 +210,7 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
           if (festival != null)
             IconButton(
               icon: Icon(festival.isWishlisted ? Icons.favorite : Icons.favorite_border),
-              color: festival.isWishlisted ? Colors.red : null,
+              color: festival.isWishlisted ? AppColors.accent : null,
               tooltip: AppStrings.wishlistTitle,
               onPressed: _isSubmitting ? null : _toggleWishlist,
             ),
@@ -392,9 +393,9 @@ class _FestivalDetailScreenState extends State<FestivalDetailScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: Colors.grey),
+          Icon(icon, size: 17, color: AppColors.inkMuted),
           const SizedBox(width: AppSizes.paddingSmall),
-          SizedBox(width: 72, child: Text(label, style: const TextStyle(color: Colors.grey))),
+          SizedBox(width: 72, child: Text(label, style: const TextStyle(color: AppColors.inkMuted))),
           Expanded(child: Text(value)),
         ],
       ),

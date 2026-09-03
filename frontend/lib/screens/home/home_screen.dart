@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../services/auth_service.dart';
 import '../../services/user_service.dart';
+import '../../theme/app_colors.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
 import '../community/community_home_screen.dart';
@@ -199,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Spacer(),
                 TextButton(
                   onPressed: _handleWithdraw,
-                  child: const Text(AppStrings.withdrawButton, style: TextStyle(color: Colors.red)),
+                  child: const Text(AppStrings.withdrawButton, style: TextStyle(color: AppColors.danger)),
                 ),
               ],
             ),
