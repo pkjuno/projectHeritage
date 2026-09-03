@@ -1,5 +1,6 @@
 const Notification = require('../models/notification.model');
 const Festival = require('../models/festival.model');
+const Post = require('../models/post.model');
 const userService = require('./user.service');
 const pushSender = require('./pushSender.service');
 const AppError = require('../utils/AppError');
@@ -15,13 +16,21 @@ const { parsePagination, toPagedResult } = require('../utils/pagination');
  * dedupeKey가 같은 알림이 이미 있으면 새로 만들지 않는다.
  * (배치가 재실행되어도 같은 알림이 두 번 가지 않도록 하는 안전장치)
  *
- * @param {{userId: number, type: string, title: string, body: string, festivalId?: number, dedupeKey: string}} payload
+ * @param {{userId: number, type: string, title: string, body: string, festivalId?: number, postId?: number, dedupeKey: string}} payload
  * @returns {Promise<{notification: Notification, created: boolean}>}
  */
-async function createIfAbsent({ userId, type, title, body, festivalId = null, dedupeKey }) {
+async function createIfAbsent({
+  userId,
+  type,
+  title,
+  body,
+  festivalId = null,
+  postId = null,
+  dedupeKey,
+}) {
   const [notification, created] = await Notification.findOrCreate({
     where: { userId, dedupeKey },
-    defaults: { userId, type, title, body, festivalId, dedupeKey },
+    defaults: { userId, type, title, body, festivalId, postId, dedupeKey },
   });
 
   if (!created) {
@@ -41,6 +50,8 @@ async function createIfAbsent({ userId, type, title, body, festivalId = null, de
         type,
         notificationId: String(notification.id),
         festivalId: festivalId ? String(festivalId) : '',
+        // 커뮤니티 알림은 축제가 아니라 게시글 화면으로 이동해야 한다.
+        postId: postId ? String(postId) : '',
       },
     });
 
@@ -63,7 +74,12 @@ async function list(userId, query = {}) {
 
   const result = await Notification.findAndCountAll({
     where: { userId },
-    include: [{ model: Festival, as: 'festival', attributes: ['id', 'name', 'startDate', 'endDate'] }],
+    include: [
+      { model: Festival, as: 'festival', attributes: ['id', 'name', 'startDate', 'endDate'] },
+      // 앱이 알림을 눌렀을 때 축제 상세로 갈지 게시글 상세로 갈지 판단할 수 있도록
+      // 연결된 게시글 정보도 함께 내려준다.
+      { model: Post, as: 'post', attributes: ['id', 'title', 'status'] },
+    ],
     limit: pagination.limit,
     offset: pagination.offset,
     order: [['createdAt', 'DESC']],

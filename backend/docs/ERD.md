@@ -335,8 +335,13 @@ erDiagram
   정리 배치가 필요합니다.
 - **이미지 첨부 / 신고·차단**: 이번 스키마에 포함되지 않았습니다.
   (`post_images`, `post_reports`, `user_blocks`는 후속 마이그레이션으로 추가)
-- **알림 연동**: 댓글/반응 알림을 붙이려면 `notifications.type` ENUM 확장과
-  `post_id` 컬럼 추가가 필요합니다. 알림 단계에서 별도 마이그레이션으로 처리합니다.
+- ~~**알림 연동**~~: 완료. `notifications.type`에 `post_comment`/`comment_reply`/`post_reaction`이
+  추가되고 `post_id` 컬럼이 붙었습니다. (마이그레이션 `20260903120000`)
+
+  > 이때 마이그레이션 드리프트 테스트가 실제 문제를 잡았습니다.
+  > `addColumn`에 `references`를 함께 주면 MySQL이 외래키 인덱스를
+  > `notifications_post_id_foreign_idx`로 만드는데, 모델 sync는 같은 인덱스를 `post_id`로 만듭니다.
+  > 컬럼 → 인덱스 → 외래키를 세 단계로 나눠 이름을 고정해 해결했습니다.
 
 ## 설계 근거 (PDF 자료 매핑)
 

@@ -114,7 +114,7 @@ async function getMyReactionMap(userId, postIds) {
 async function set(userId, postId, type) {
   const validType = validateType(type);
 
-  await sequelize.transaction(async (transaction) => {
+  const isNewReaction = await sequelize.transaction(async (transaction) => {
     await findReactablePostOrThrow(postId, transaction);
 
     const existing = await PostReaction.findOne({ where: { userId, postId }, transaction });
@@ -122,7 +122,7 @@ async function set(userId, postId, type) {
     if (!existing) {
       await PostReaction.create({ userId, postId, type: validType }, { transaction });
       await Post.increment('reactionCount', { by: 1, where: { id: postId }, transaction });
-      return;
+      return true;
     }
 
     // 종류만 바뀌므로 카운터는 건드리지 않는다. 여기서 증가시키면
@@ -130,7 +130,17 @@ async function set(userId, postId, type) {
     if (existing.type !== validType) {
       await existing.update({ type: validType }, { transaction });
     }
+
+    // 종류만 바꾼 것은 새 반응이 아니다. 여기서 알림을 보내면
+    // 이모지를 바꿀 때마다 글쓴이에게 알림이 간다.
+    return false;
   });
+
+  if (isNewReaction) {
+    // 알림은 트랜잭션 커밋 뒤에 보낸다. (댓글과 같은 이유)
+    const post = await Post.findByPk(postId);
+    await require('./communityNotifier.service').notifyReactionAdded(post, userId);
+  }
 
   return getSummary(postId, userId);
 }

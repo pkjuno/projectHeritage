@@ -2,6 +2,7 @@ const { DataTypes, Model } = require('sequelize');
 const { sequelize } = require('../config/database');
 const User = require('./user.model');
 const Festival = require('./festival.model');
+const Post = require('./post.model');
 
 /**
  * 회원에게 보낼 알림 모델.
@@ -29,7 +30,16 @@ Notification.init(
 
     // 알림 종류 (schedule_reminder: 방문 예정일 하루 전 알림)
     type: {
-      type: DataTypes.ENUM('schedule_reminder', 'festival_start', 'notice'),
+      // schedule_reminder/festival_start/notice: 축제 도메인 알림
+      // post_comment/comment_reply/post_reaction: 커뮤니티 알림
+      type: DataTypes.ENUM(
+        'schedule_reminder',
+        'festival_start',
+        'notice',
+        'post_comment',
+        'comment_reply',
+        'post_reaction'
+      ),
       allowNull: false,
     },
 
@@ -45,6 +55,13 @@ Notification.init(
 
     // 알림을 누르면 이동할 축제 (없을 수도 있음)
     festivalId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+
+    // 알림을 눌렀을 때 이동할 게시글 (Post FK, 커뮤니티 알림에서만 채워진다).
+    // 글이 삭제돼도 알림 이력은 남아야 하므로 FK는 SET NULL이다.
+    postId: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
@@ -88,5 +105,9 @@ Notification.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 
 Festival.hasMany(Notification, { foreignKey: 'festivalId', as: 'notifications', onDelete: 'CASCADE' });
 Notification.belongsTo(Festival, { foreignKey: 'festivalId', as: 'festival' });
+
+// 게시글이 지워져도 알림 이력은 남고 연결만 끊긴다.
+Post.hasMany(Notification, { foreignKey: 'postId', as: 'notifications', onDelete: 'SET NULL' });
+Notification.belongsTo(Post, { foreignKey: 'postId', as: 'post' });
 
 module.exports = Notification;

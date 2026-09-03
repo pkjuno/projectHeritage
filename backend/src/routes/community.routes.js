@@ -3,12 +3,20 @@ const boardCategoryController = require('../controllers/boardCategory.controller
 const postController = require('../controllers/post.controller');
 const commentController = require('../controllers/comment.controller');
 const reactionController = require('../controllers/reaction.controller');
+const dashboardController = require('../controllers/communityDashboard.controller');
 const authenticate = require('../middlewares/authenticate');
 const optionalAuthenticate = require('../middlewares/optionalAuthenticate');
 const requireAdmin = require('../middlewares/requireAdmin');
 
 // 커뮤니티(게시판) 라우터
 const router = express.Router();
+
+// --- 대시보드 / 내 활동 ---
+// 커뮤니티 홈을 한 번의 요청으로 그린다. 로그인하면 내 활동 요약이 함께 온다.
+router.get('/dashboard', optionalAuthenticate, dashboardController.getDashboard);
+router.get('/me/posts', authenticate, dashboardController.listMyPosts);
+router.get('/me/comments', authenticate, dashboardController.listMyComments);
+router.get('/me/reactions', authenticate, dashboardController.listMyReactions);
 
 // 게시판 목록 (비회원 공개)
 router.get('/categories', boardCategoryController.list);

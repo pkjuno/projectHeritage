@@ -233,6 +233,11 @@ async function create(userId, postId, body = {}) {
     return created;
   });
 
+  // 알림은 트랜잭션이 커밋된 뒤에 보낸다.
+  // 안에서 보내면 알림 저장 실패가 댓글 작성까지 롤백시킨다.
+  // (순환 참조를 피하려고 함수 안에서 require 한다)
+  await require('./communityNotifier.service').notifyCommentCreated(comment);
+
   const withAuthor = await PostComment.findByPk(comment.id, { include: [AUTHOR_INCLUDE] });
   return toResponse(withAuthor, { id: userId }, new Set());
 }
